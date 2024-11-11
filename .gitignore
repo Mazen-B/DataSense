@@ -1,6 +1,5 @@
 **__pycache__/
 *__init__.py
-log_files/
-plots/
-logs/
+*_files/
+*_logs/
 config.yaml

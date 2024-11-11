@@ -4,11 +4,12 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from utils.file_management import create_output_dir, cleanup_old_logs
 
-def initialize_logging(level="INFO", log_dir="logs", max_bytes=5*1024*1024, backup_count=5):
+def initialize_logging(level="INFO", log_dir_name="system_logs", max_bytes=5*1024*1024, backup_count=5):
     """
   This function initializes logging with the specified level, console and file logging, and log rotation.
   """
     # create the logs dir if it does not exist
+    log_dir = os.path.join("..", log_dir_name)
     create_output_dir(log_dir)
 
     # clean up old log directories if there are more than 5

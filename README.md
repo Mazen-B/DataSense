@@ -51,5 +51,14 @@ The logging setup records information both to the console and to rotating log fi
 - **Error Handling**: Errors are logged and can be raised as exceptions for debugging.
 
 ## TODO
-- [ ] every input in the config should be validates (only csv or excel), etc...
+- ### Config-related
+- [x] every input in the config should be validates (only csv or excel), etc...
 - [ ] date_format in the config file we should be able to choose we want to one day, h, m or with s
+- ### DataManger-related
+  - **loaders**:
+    - [ ] load excel and csv we transform the columns into lower cases before we load (in original and request)
+    - [ ] make loader more robust: abstract class add dask or Fireducks for the others
+  - **preprocessing**:
+    - [ ] in core_preprocessing we need way more stuff if we want to work with statitics (one main method ther)
+  - **time_processing**:
+    - [ ] in get_filtered_data, we need to only load the needed columns for a specific time range

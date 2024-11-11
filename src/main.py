@@ -1,5 +1,4 @@
-import logging
-from pathlib import Path
+import os
 from config.config_loader import load_validate_config
 from utils.logging_setup import initialize_logging, log_and_raise_error
 from core.statistics import run_single_day, run_everyday, run_multi_days
@@ -14,7 +13,7 @@ def main():
     initialize_logging(level="INFO")
 
     # load and validate the configuration file
-    config_path = Path("..") / "config.yaml"
+    config_path = os.path.join("..", "config.yaml")
     try:
         config = load_validate_config(config_path)
     except Exception as e:
