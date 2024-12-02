@@ -31,9 +31,7 @@ def initialize_logging(level="INFO", log_dir_name="system_logs", max_bytes=5*102
         level=getattr(logging, level.upper()),
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[
-            # Logs to console
             logging.StreamHandler(),  
-            # Logs to file with rotation
             RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count)
         ]
     )

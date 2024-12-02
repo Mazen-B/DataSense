@@ -2,7 +2,7 @@ import logging
 import pandas as pd
 from utils.logging_setup import log_and_raise_error
 from data_manager.loaders.data_loader import load_data
-from data_manager.time_processing.time_preprocessor import TimePreprocessor
+from data_manager.preprocessing.time_preprocessor import TimePreprocessor
 
 class FilterDateRange:
     def __init__(self, file_path, sensors, time_column, time_format):
@@ -74,5 +74,10 @@ class FilterDateRange:
 
         # Step 3: add the time column
         data[self.time_column] = filtered_time.values
+
+        # Step 4: Reorder columns to make the time column the first one
+        columns_order = [self.time_column] + [col for col in data.columns if col != self.time_column]
+        data = data[columns_order]
+
         logging.info(f"DataFrame was partially loaded with the needed columns and row range.")
         return data

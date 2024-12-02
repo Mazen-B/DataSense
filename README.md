@@ -60,5 +60,9 @@ The logging setup records information both to the console and to rotating log fi
     - [ ] make loader more robust: abstract class add dask or Fireducks for the others
   - **preprocessing**:
     - [ ] in core_preprocessing we need way more stuff if we want to work with statitics (one main method ther)
+    - [ ] data quality and validation
   - **time_processing**:
-    - [ ] in get_filtered_data, we need to only load the needed columns for a specific time range
+    - [x] in get_filtered_data, we need to only load the needed columns for a specific time range
+- ### Unit tests 
+  - [ ] for conf loggic
+  - [ ] for data manamgenemt loggic
