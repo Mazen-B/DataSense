@@ -61,6 +61,9 @@ The logging setup records information both to the console and to rotating log fi
   - **preprocessing**:
     - [ ] in core_preprocessing we need way more stuff if we want to work with statitics (one main method ther)
     - [ ] data quality and validation
+    - [ ] add a section in the conf file for the prepresessing options
+    - **preload**:
+    - [ ] have the full data option
   - **time_processing**:
     - [x] in get_filtered_data, we need to only load the needed columns for a specific time range
 - ### Unit tests 

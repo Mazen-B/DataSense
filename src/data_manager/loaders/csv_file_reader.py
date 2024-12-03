@@ -10,7 +10,7 @@ class CSVFileReader(BaseFileReader):
       """
         try:
             data = pd.read_csv(self.file_path, usecols=columns, skiprows=skiprows, nrows=nrows)
-            logging.info(f"Successfully read CSV file: {self.file_path} with specified row limits")
+            logging.info(f"Successfully read CSV file: {self.file_path} with specified column(s): {columns}")
             return data
         except Exception as e:
             log_and_raise_error(f"Failed to read CSV file {self.file_path}: {e}")

@@ -10,7 +10,7 @@ class ExcelFileReader(BaseFileReader):
       """
         try:
             data = pd.read_excel(self.file_path, usecols=columns, skiprows=skiprows, nrows=nrows)
-            logging.info(f"Successfully read Excel file: {self.file_path}")
+            logging.info(f"Successfully read Excel file: {self.file_path} with specified column(s): {columns}")
             return data
         except Exception as e:
             log_and_raise_error(f"Failed to read Excel file {self.file_path}: {e}")

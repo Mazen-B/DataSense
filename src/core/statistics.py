@@ -1,26 +1,10 @@
+import os
+import sys
 import logging
-from pathlib import Path
 from data_manager.data_processing import DataProcessor
 
-def get_yaml_input(config, date=True, multi_days=False):
-    """
-  This function retrieves the needed info from the configuration file.
-  """
-    log_file = Path(config["logging"]["log_file"])
-    output_dir = Path(config["processing"]["output_dir"])
-    time_column = config["processing"]["time_column"]
-    time_format = config["processing"]["time_format"]
-    sensors = config["sensors"]
-
-    if multi_days:
-        start_date = config["processing"]["start_date"]
-        end_date = config["processing"]["end_date"]
-        return log_file, output_dir, time_column, time_format, sensors, start_date, end_date
-    elif date:
-        date = config["processing"]["date"]
-        return log_file, output_dir, time_column, time_format, sensors, date
-    else:
-        return log_file, output_dir, time_column, time_format, sensors, None
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from config.config_loader import get_yaml_input
 
 def generate_stats(log_file, output_dir, time_column, time_format, sensors, date):
     """

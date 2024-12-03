@@ -20,6 +20,7 @@ class FilterDateRange:
         # load only the time column from the dataset
         time_data = load_data(self.file_path).read_file(columns=[self.time_column])
         self.time_data_checker = TimePreprocessor(time_data, self.time_column, self.time_format)
+
         # process the time column + convert it to series
         self.filtered_time = self.time_data_checker.process_time_column().index.to_series()
         
