@@ -8,7 +8,7 @@ class DataProcessor:
         self.time_column = time_column
         self.time_format = time_format
 
-    def process_days(self, start_date, end_date=None):
+    def process_days(self, filtered_data_file, start_date, end_date=None):
         """
       This method prepares the data by loading and validating based on specified date range and columns.
       """
@@ -18,9 +18,12 @@ class DataProcessor:
 
         # Step 2: preprocess and clean the filtered data
         data_checker = DataChecker(filtered_data, self.sensors, self.time_column)
-        data_checker.full_validation()
+        filtered_data = data_checker.full_validation()
 
-        # Step 3: Prepare the components needed for plotting
+        # save the filtered data
+        filtered_data.to_csv(filtered_data_file, index=False)
+
+        # Step 3: prepare the components needed for plotting (separate them in the conf file)
         time = filtered_data[self.time_column]
         te_sensors = [filtered_data[col] for col in filtered_data.columns if col.startswith("te_")]
         pe_sensors = [filtered_data[col] for col in filtered_data.columns if col.startswith("pe_")]

@@ -30,7 +30,7 @@ class FilterDateRange:
       If "end_date" is None, it defaults to finding rows within a single day specified by "start_date".
       """
         self._initialize_time_column()
-        logging.info(f"{self.time_column} column has been processed, indexed and converted into series")
+        logging.info(f"The '{self.time_column}' column has been processed, indexed and converted into series.")
 
         # convert dates to datetime
         start_date = pd.to_datetime(start_date)
@@ -55,7 +55,7 @@ class FilterDateRange:
         start_row_index = matching_rows.index.get_loc(start_row_timestamp)
         end_row_index = matching_rows.index.get_loc(end_row_timestamp)
 
-        logging.info(f"Got date range from {start_row_timestamp} to {end_row_timestamp}")
+        logging.info(f"Got date range from {start_row_timestamp} to {end_row_timestamp}.")
 
         return (start_row_index, end_row_index), matching_rows
 

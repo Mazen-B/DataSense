@@ -1,5 +1,6 @@
 **__pycache__/
 *__init__.py
+config.yaml
 *_files/
 *_logs/
-config.yaml
+output/

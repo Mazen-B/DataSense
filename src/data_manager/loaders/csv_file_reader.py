@@ -10,7 +10,12 @@ class CSVFileReader(BaseFileReader):
       """
         try:
             data = pd.read_csv(self.file_path, usecols=columns, skiprows=skiprows, nrows=nrows)
-            logging.info(f"Successfully read CSV file: {self.file_path} with specified column(s): {columns}")
+            if skiprows is None and nrows is None:
+                logging.info(f"Successfully read CSV file: {self.file_path} with only the '{columns[0]}' column.")
+            else:
+                logging.info(f"Successfully read the CSV with specified column(s): {columns}, for a specific time range.")
+
             return data
+
         except Exception as e:
             log_and_raise_error(f"Failed to read CSV file {self.file_path}: {e}")

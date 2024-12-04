@@ -10,7 +10,6 @@ def create_output_dir(output_dir):
         os.makedirs(output_dir, exist_ok=True)
         logging.info(f"Created output directory: {output_dir}")
 
-
 def cleanup_output_dir(output_dir):
     """
   This function deletes the output directory if it exists.

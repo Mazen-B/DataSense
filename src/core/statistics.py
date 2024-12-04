@@ -13,9 +13,10 @@ def generate_stats(log_file, output_dir, time_column, time_format, sensors, date
   """
     # step 1: process the data using DataProcesso
     data_processor = DataProcessor(log_file, sensors, time_column, time_format)
-    one_day_data = data_processor.process_days(date)
+    # specify the file, where we want to store the filtered data
+    filtered_data_file = os.path.join(output_dir, "filtered_data.csv")
+    one_day_data = data_processor.process_days(filtered_data_file, date)
     
-    print("what is one_day_data: ", one_day_data)
 
     # further steps will be added later
 
@@ -26,7 +27,7 @@ def run_single_day(config):
     # get input from the config
     log_file, output_dir, time_column, time_format, sensors, date = get_yaml_input(config, date=True)
 
-    logging.info(f"Starting single_day analysis for {date}")
+    logging.info(f"Starting single_day analysis for {date}.")
     generate_stats(log_file, output_dir, time_column, time_format, sensors, date)
   
 def run_multi_days(config):

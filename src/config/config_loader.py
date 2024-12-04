@@ -1,8 +1,14 @@
+import os
+import sys 
 import yaml
 import logging
 from pathlib import Path
 from utils.logging_setup import log_and_raise_error
 from config.validate_config import validate_config
+
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from utils.file_management import create_output_dir
 
 def load_validate_config(config_file):
     """
@@ -32,6 +38,9 @@ def get_yaml_input(config, date=True, multi_days=False):
     time_column = config["processing"]["time_column"]
     time_format = config["processing"]["time_format"]
     sensors = config["sensors"]
+
+    # create the output dir if it does not exist
+    create_output_dir(output_dir)
 
     if multi_days:
         start_date = config["processing"]["start_date"]
