@@ -53,10 +53,10 @@ The logging setup records information both to the console and to rotating log fi
 ## TODO
 - ### Config-related
 - [x] every input in the config should be validates (only csv or excel), etc...
-- [ ] date_format in the config file we should be able to choose we want to one day, h, m or with s
+- [ ] more specific config with sections: processing, preprosessing and so on where we add all the needed inputs
 - ### DataManger-related
   - **loaders**:
-    - [ ] load excel and csv we transform the columns into lower cases before we load (in original and request)
+    - [ ] load excel and csv we transform the columns into lower cases before we load (in original and request) - call the validation function from the the DataChecker class 
     - [ ] make loader more robust: abstract class add dask or Fireducks for the others
   - **preprocessing**:
     - [ ] in core_preprocessing we need way more stuff if we want to work with statitics (one main method ther)
@@ -67,5 +67,5 @@ The logging setup records information both to the console and to rotating log fi
   - **time_processing**:
     - [x] in get_filtered_data, we need to only load the needed columns for a specific time range
 - ### Unit tests 
-  - [ ] for conf loggic
-  - [ ] for data manamgenemt loggic
+  - [ ] for conf logic
+  - [ ] for data manamgenemt logic

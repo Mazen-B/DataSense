@@ -12,6 +12,8 @@ class TimePreprocessor:
         """
       This is the initial filtering step that processes the time column by converting to datetime, sorting, checking duplicates, and validating.
       """
+        logging.info(f"Starting the initial filtering and processing of the '{self.time_column}' column.")
+
         self.validate_time_column()
         self.convert_to_datetime()
         self.order_time_column()
@@ -19,6 +21,8 @@ class TimePreprocessor:
       
         # set the time column as the index
         self.df.set_index(self.time_column, inplace=True)
+    
+        logging.info(f"The '{self.time_column}' column has been processed, indexed and converted into series.")
         return self.df
 
     def validate_time_column(self):
@@ -61,21 +65,27 @@ class TimePreprocessor:
       """
         if self.time_column not in self.df.columns:
             log_and_raise_error(f"Column '{self.time_column}' not found in DataFrame.")
-        
+
         duplicate_count = self.df.duplicated(subset=[self.time_column]).sum()
         if duplicate_count > 0:
-            logging.warning(f"{duplicate_count} duplicate rows found in '{self.time_column}' column.")
+            # get duplicated time values
+            duplicated_times = self.df.loc[self.df.duplicated(subset=[self.time_column], keep=False), self.time_column].unique()
             
             if keep is None:
-                # issue a warning but do not remove duplicates
-                logging.warning(f"Duplicates in column '{self.time_column}' were not removed as 'keep=None' was specified.")
+                # issue a warning with detailed duplicate time values
+                logging.warning(
+                    f"Duplicates in column '{self.time_column}' were found but not removed as 'keep=None' was specified. "
+                    f"Duplicated time values: {list(duplicated_times)}"
+                )
                 return self.df
             else:
                 try:
                     # remove duplicates based on the "keep" parameter
-                    logging.warning(f"{duplicate_count} duplicate rows were removed from the '{self.time_column}' column.")
+                    logging.warning(
+                        f"{duplicate_count} duplicate rows were found in the '{self.time_column}' column and removed. "
+                        f"Duplicated time values: {list(duplicated_times)}"
+                    )
                     self.df = self.df.drop_duplicates(subset=[self.time_column], keep=keep)
                 except Exception as e:
                     log_and_raise_exception(f"Failed to remove duplicates based on '{self.time_column}': {str(e)}")
-        
         return self.df

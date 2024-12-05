@@ -13,7 +13,7 @@ class ExcelFileReader(BaseFileReader):
             if skiprows is None and nrows is None:
                 logging.info(f"Successfully read Excel file: {self.file_path} with only the '{columns[0]}' column.")
             else:
-                logging.info(f"Successfully read the Excel CSV with specified column(s): {columns}, for a specific time range.")
+                logging.info(f"Successfully read the Excel CSV with specified column(s): {columns}, for the extracted time range.")
             return data
 
         except Exception as e:

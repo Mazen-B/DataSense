@@ -12,10 +12,15 @@ class DataChecker:
         """
       This method performs a full validation and cleaning process.
       """
+        logging.info("Starting the data cleaning and validation process for the loaded dataset.")
+
         self.validate_columns()
-        self.handle_missing_values(strategy="fill", fill_method="mean", fill_value=None, time_window="5min")
-        # self.validate_data_types()
-        # self.detect_outliers()
+        self.handle_missing_values(strategy="fill", fill_method="mean", fill_value=None, time_window="1min")
+        self.encode_categorical_and_booleans()
+        self.validate_data_types()
+        self.detect_outliers()
+
+        logging.info("Data cleaning and validation process completed. The dataset is now ready for further analysis.")
         return self.df
 
     def validate_columns(self):
@@ -29,6 +34,7 @@ class DataChecker:
         missing_columns = [col for col in required_columns if col not in self.df.columns]
         if missing_columns:
             log_and_raise_error(f"Missing columns in data: {missing_columns}")
+
         return self.df
 
     def handle_missing_values(self, strategy, fill_method="drop", fill_value=None, time_window=None):
@@ -124,26 +130,65 @@ class DataChecker:
 
         return self.df
 
+    def encode_categorical_and_booleans(self):
+        """
+      This method encodes non-numeric columns into numerical representations.
+        - Boolean-like values (True/False) are converted to 1/0.
+        - Binary categorical values (e.g., ON/OFF) are mapped to 1/0.
+        - Multi-class categorical values are encoded as integers.
+      """
+        for column in self.df.columns:
+            if column == self.time_column:
+                continue
+            col_dtype = self.df[column].dtype
+
+            # boolean columns
+            if col_dtype == "bool":
+                logging.info(f"Encoding boolean column '{column}' as integers.")
+                self.df[column] = self.df[column].astype(int)
+
+            # object or string-based columns
+            elif col_dtype == "object" or str(col_dtype).startswith("string"):
+                unique_values = self.df[column].dropna().unique()
+                
+                # if binary categorical (e.g., ON/OFF, Yes/No, etc.)
+                if len(unique_values) == 2:
+                    logging.info(f"Encoding binary categorical column '{column}' as integers.")
+                    self.df[column] = self.df[column].map({unique_values[0]: 0, unique_values[1]: 1})
+                
+                # if multi-class categorical
+                else:
+                    logging.info(f"Encoding multi-class categorical column '{column}' with unique values: {unique_values}.")
+                    self.df[column] = self.df[column].astype("category").cat.codes
+
+            # handle any unexpected data types
+            elif not pd.api.types.is_numeric_dtype(col_dtype):
+                logging.warning(f"Unexpected non-numeric column '{column}' detected with dtype '{col_dtype}'.")
+
+        return self.df
 
     def validate_data_types(self):
         """
       This method validates that the columns have expected data types.
       """
-        expected_dtypes = {sensor: "float64" for sensor in self.sensors}
-        if self.time_column:
-            expected_dtypes[self.time_column] = "datetime64[ns]"
-        
-        mismatches = {}
-        for col, expected_dtype in expected_dtypes.items():
-            if col in self.df.columns:
-                actual_dtype = str(self.df[col].dtype)
-                if actual_dtype != expected_dtype:
-                    mismatches[col] = {'expected': expected_dtype, 'actual': actual_dtype}
-            else:
-                mismatches[col] = {'expected': expected_dtype, 'actual': 'Column not found'}
-        
-        if mismatches:
-            log_and_raise_error(f"Data type mismatches found: {mismatches}")
+        expected_dtype = "float64"
+
+        # identify non-numeric columns, excluding the time column
+        non_numeric_cols = [
+            col for col in self.df.columns 
+            if col != self.time_column and not pd.api.types.is_numeric_dtype(self.df[col].dtype)
+        ]
+        if non_numeric_cols:
+            log_and_raise_error(f"Non-numeric columns detected (excluding time column): {non_numeric_cols}")
+
+        # identify numeric columns that are not of the expected type
+        invalid_numeric_cols = [
+            col for col in self.df.columns 
+            if col != self.time_column and self.df[col].dtype != expected_dtype
+        ]
+        if invalid_numeric_cols:
+            log_and_raise_error(f"Numeric columns with unexpected types detected (not {expected_dtype}): {invalid_numeric_cols}")
+
         return self.df
 
     def detect_outliers(self, method="z_score", threshold=3):
