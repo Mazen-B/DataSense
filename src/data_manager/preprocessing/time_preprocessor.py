@@ -8,7 +8,7 @@ class TimePreprocessor:
         self.time_column = time_column
         self.time_format = time_format
 
-    def process_time_column(self):
+    def process_time_column(self, keep):
         """
       This is the initial filtering step that processes the time column by converting to datetime, sorting, checking duplicates, and validating.
       """
@@ -17,7 +17,7 @@ class TimePreprocessor:
         self.validate_time_column()
         self.convert_to_datetime()
         self.order_time_column()
-        self.check_duplicates(keep="first")
+        self.check_duplicates(keep)
       
         # set the time column as the index
         self.df.set_index(self.time_column, inplace=True)

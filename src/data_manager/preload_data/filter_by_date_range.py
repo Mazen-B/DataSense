@@ -4,12 +4,13 @@ from utils.logging_setup import log_and_raise_error
 from data_manager.loaders.data_loader import load_data
 from data_manager.preprocessing.time_preprocessor import TimePreprocessor
 
-class FilterDateRange:
-    def __init__(self, file_path, sensors, time_column, time_format):
+class DataLoader:
+    def __init__(self, file_path, sensors, time_column, time_format, check_duplicates_keep):
         self.file_path = file_path
         self.sensors = sensors
         self.time_column = time_column
         self.time_format = time_format
+        self.check_duplicates_keep = check_duplicates_keep
         self.filtered_time = None
         self.time_data_checker = None
 
@@ -22,7 +23,7 @@ class FilterDateRange:
         self.time_data_checker = TimePreprocessor(time_data, self.time_column, self.time_format)
 
         # process the time column + convert it to series
-        self.filtered_time = self.time_data_checker.process_time_column().index.to_series()
+        self.filtered_time = self.time_data_checker.process_time_column(self.check_duplicates_keep).index.to_series()
         
     def _find_date_rows(self, start_date, end_date=None):
         """
@@ -75,7 +76,7 @@ class FilterDateRange:
         # Step 3: add the time column
         data[self.time_column] = filtered_time.values
 
-        # Step 4: Reorder columns to make the time column the first one
+        # Step 4: reorder columns to make the time column the first one
         columns_order = [self.time_column] + [col for col in data.columns if col != self.time_column]
         data = data[columns_order]
 

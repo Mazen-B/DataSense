@@ -8,17 +8,20 @@ class DataChecker:
         self.sensors = sensors if sensors is not None else []
         self.time_column = time_column
 
-    def full_validation(self):
+    def full_validation(self, core_processing_par):
         """
       This method performs a full validation and cleaning process.
       """
         logging.info("Starting the data cleaning and validation process for the loaded dataset.")
+        
+        strategy, fill_method, fill_value, time_window, outliers_method, threshold = core_processing_par
 
         self.validate_columns()
-        self.handle_missing_values(strategy="fill", fill_method="mean", fill_value=None, time_window="1min")
+        self.handle_missing_values(strategy, fill_method, fill_value, time_window)
         self.encode_categorical_and_booleans()
         self.validate_data_types()
-        self.detect_outliers()
+        if outliers_method:
+            self.detect_outliers(outliers_method, threshold)
 
         logging.info("Data cleaning and validation process completed. The dataset is now ready for further analysis.")
         return self.df
@@ -37,7 +40,7 @@ class DataChecker:
 
         return self.df
 
-    def handle_missing_values(self, strategy, fill_method="drop", fill_value=None, time_window=None):
+    def handle_missing_values(self, strategy, fill_method, fill_value=None, time_window=None):
         """
       This method handles missing values in the DataFrame for all columns.
       We can have the follwing args:
@@ -191,7 +194,7 @@ class DataChecker:
 
         return self.df
 
-    def detect_outliers(self, method="z_score", threshold=3):
+    def detect_outliers(self, method, threshold):
         """
       This method detects outliers in sensor columns based on the specified method.
       """
