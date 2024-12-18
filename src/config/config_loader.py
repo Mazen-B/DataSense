@@ -31,23 +31,45 @@ def load_validate_config(config_file):
 
 def get_yaml_input(config, date=True, multi_days=False):
     """
-  This function retrieves the needed info from the configuration file.
+  This function retrieves the needed info from the config file.
   """
-    log_file = Path(config["logging"]["log_file"])
-    output_dir = Path(config["processing"]["output_dir"])
-    time_column = config["processing"]["time_column"]
-    time_format = config["processing"]["time_format"]
-    sensors = config["sensors"]
+    input_file = Path(config["input_file"])
+    output_dir = Path(config["output_dir"])
+    time_column = config["time_column"]
+    time_format = config["time_format"]
+
+    # get the sensors
+    sensors = {}
+    ALLOWED_DIVISIONS = ["temperature", "pressure", "el_power", "rpm", "ordinal", "categorical"]
+    for division in ALLOWED_DIVISIONS:
+        if division in config["sensors"]:
+            sensors[division] = config["sensors"][division]
+
+    # get pre-processing parameters
+    pre_processing = config["pre_processing"]
+    missing_values_strategy = pre_processing["handle_missing_values"]["strategy"]
+    missing_values_fill_method = pre_processing["handle_missing_values"]["fill_method"]
+    missing_values_fill_value = pre_processing["handle_missing_values"]["fill_value"]
+    missing_values_time_window = pre_processing["handle_missing_values"]["time_window"]
+    detect_outliers_method = pre_processing.get("detect_outliers", {}).get("method")
+    detect_outliers_threshold = pre_processing.get("detect_outliers", {}).get("threshold")
+    check_duplicates_keep = pre_processing["check_duplicates"]["keep"]
+    core_processing_par = [missing_values_strategy, missing_values_fill_method, missing_values_fill_value,
+        missing_values_time_window, detect_outliers_method, detect_outliers_threshold]
 
     # create the output dir if it does not exist
     create_output_dir(output_dir)
 
-    if multi_days:
-        start_date = config["processing"]["start_date"]
-        end_date = config["processing"]["end_date"]
-        return log_file, output_dir, time_column, time_format, sensors, start_date, end_date
-    elif date:
-        date = config["processing"]["date"]
-        return log_file, output_dir, time_column, time_format, sensors, date
+    if date:
+        # for "single_day" mode
+        date = config["date"]
+        return input_file, output_dir, time_column, time_format, sensors, date, core_processing_par, check_duplicates_keep
+    elif  multi_days:
+        # for "multi_days" mode 
+        start_date = config["start_date"]
+        end_date = config["end_date"]
+        return input_file, output_dir, time_column, time_format, sensors, start_date, end_date, core_processing_par, check_duplicates_keep
+
     else:
-        return log_file, output_dir, time_column, time_format, sensors, None
+        # for "full_data" mode 
+        return input_file, output_dir, time_column, time_format, sensors, None, core_processing_par, check_duplicates_keep

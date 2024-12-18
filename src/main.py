@@ -1,7 +1,7 @@
 import os
 from config.config_loader import load_validate_config
 from utils.logging_setup import initialize_logging, log_and_raise_error
-from core.statistics import run_single_day, run_everyday, run_multi_days
+from core.mode_runner import run_single_day, run_everyday, run_multi_days
 
 def main():
     """
@@ -19,12 +19,12 @@ def main():
     except Exception as e:
         log_and_raise_error(f"Error loading configuration: {e}")
 
-    # get the needed var to start the plotting process 
+    # get the needed var to start the plotting process
     mode = config.get("mode", "single_day")
     mode_mapping = {
         "single_day": run_single_day,
         "multi_days": run_multi_days,
-        "everyday": run_everyday
+        "full_data": run_everyday
     }
 
     # run the function based on the mode

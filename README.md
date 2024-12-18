@@ -9,21 +9,34 @@
 All necessary input parameters are defined in the `config.yaml` file. Modify this configuration file to set the log file location, processing options, mode of operation, and sensor selection. Below is an example of the `config.yaml` file and details on each section:
 
 ```yaml
-logging:
-  log_file: "../log_files/dummy_data.csv"
-processing:
-  output_dir: "../stats/"
-  time_column: "time"
-  time_format: "%Y-%m-%d %H:%M:%S"  # Choose from: "%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S", "%m-%d-%Y %H:%M:%S"
-  date: "2024-05-31"
-  mode: "single_day"  # Options: "single_day", "multi_days", "everyday", "full_data"
+input_file: "../input_files/missing_values.csv"
+output_dir: "../output/stats/"
+date: "2024-06-01" # must have this format YYYY-MM-DD
+mode: "single_day" # Options: "single_day" "multi_days", "full_data"
+time_column: "time"
+time_format: "%Y-%m-%d %H:%M:%S"  # Choose from: "%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S", "%m-%d-%Y %H:%M:%S"
 sensors:
-  - "temp1"
-  - "temp2"
-  - "pressure1"
-  - "pressure1"
-  - "electical_power"
+  temperature:
+    - "te306"
+    - "te307"
+  pressure:
+    - "pe303"
+    - "pe301"
+  el_power:
+    - "pelgross"
+pre_processing:
+  handle_missing_values:
+    strategy: "fill"
+    fill_method: "mean"
+    fill_value: null
+    time_window: "1min"
+  detect_outliers:
+    method: "z_score"
+    threshold: 3
+  check_duplicates:
+    keep: "first"
 ```
+
 ### Configuration Details
 
 - **Log File**: Path to the sensor data file (CSV or XLSX). This file must end with `.csv` or `.xlsx`, or an error will be raised.
@@ -35,7 +48,6 @@ sensors:
   - Set the `mode` to define the data processing scope. Options:
     - **single_day**: Requires `date`.
     - **multi_days**: Requires `start_date` and `end_date`.
-    - **everyday**: Processes data without specific dates.
     - **full_data**: Processes the entire dataset without specific date restrictions.
 - **Sensors**: A list of sensor IDs to include in the analysis (at least one is needed).
 
@@ -53,15 +65,15 @@ The logging setup records information both to the console and to rotating log fi
 ## TODO
 - ### Config-related
 - [x] every input in the config should be validates (only csv or excel), etc...
-- [ ] more specific config with sections: processing, preprosessing and so on where we add all the needed inputs
+- [x] more specific config with sections: processing, preprosessing and so on where we add all the needed inputs
 - ### DataManger-related
   - **loaders**:
     - [ ] load excel and csv we transform the columns into lower cases before we load (in original and request) - call the validation function from the the DataChecker class 
     - [ ] make loader more robust: abstract class add dask or Fireducks for the others
   - **preprocessing**:
-    - [ ] in core_preprocessing we need way more stuff if we want to work with statitics (one main method ther)
-    - [ ] data quality and validation
-    - [ ] add a section in the conf file for the prepresessing options
+    - [x] in core_preprocessing we need way more stuff if we want to work with statitics (one main method there)
+    - [ ] flag the outlier or remove them (with None option)
+    - [x] add a section in the conf file for the prepresessing options
     - **preload**:
     - [ ] have the full data option
   - **time_processing**:
