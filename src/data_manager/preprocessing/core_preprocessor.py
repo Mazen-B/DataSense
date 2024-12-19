@@ -169,7 +169,7 @@ class DataChecker:
 
         return self.df
 
-    def validate_data_types(self, valid_dtypes):
+    def validate_data_types(self):
         """
       This method validates that the columns have expected data types.
       """

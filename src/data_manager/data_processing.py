@@ -12,7 +12,7 @@ class DataProcessor:
         self.core_processing_par = core_processing_par
         self.check_duplicates_keep = check_duplicates_keep
 
-    def process_days(self, start_date, end_date=None):
+    def process_time_range(self, start_date, end_date=None):
         """
       This method prepares the data by loading and validating based on specified date range and columns.
       """
@@ -45,6 +45,6 @@ class DataProcessor:
 
     def process_full_data(self):
         """
-      This method prepares and returns the full dataset after initial filtering.
+      This method prepares the data by loading only the specified columns for the full dataset after initial filtering.
       """
         pass

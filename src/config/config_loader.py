@@ -29,7 +29,7 @@ def load_validate_config(config_file):
     except yaml.YAMLError as e:
         log_and_raise_error(f"Error parsing YAML config file: {e}")
 
-def get_yaml_input(config, date=True, multi_days=False):
+def get_yaml_input(config, single_date=False, time_range=False):
     """
   This function retrieves the needed info from the config file.
   """
@@ -60,16 +60,15 @@ def get_yaml_input(config, date=True, multi_days=False):
     # create the output dir if it does not exist
     create_output_dir(output_dir)
 
-    if date:
+    if single_date:
         # for "single_day" mode
         date = config["date"]
         return input_file, output_dir, time_column, time_format, sensors, date, core_processing_par, check_duplicates_keep
-    elif  multi_days:
-        # for "multi_days" mode 
+    elif time_range:
+        # for "time_range" mode 
         start_date = config["start_date"]
         end_date = config["end_date"]
         return input_file, output_dir, time_column, time_format, sensors, start_date, end_date, core_processing_par, check_duplicates_keep
-
     else:
         # for "full_data" mode 
-        return input_file, output_dir, time_column, time_format, sensors, None, core_processing_par, check_duplicates_keep
+        return input_file, output_dir, time_column, time_format, sensors, core_processing_par, check_duplicates_keep
