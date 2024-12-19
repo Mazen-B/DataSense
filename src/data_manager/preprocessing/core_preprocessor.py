@@ -20,8 +20,7 @@ class DataChecker:
         self.handle_missing_values(strategy, fill_method, fill_value, time_window)
         self.encode_categorical_and_booleans()
         self.validate_data_types()
-        if outliers_method:
-            self.detect_outliers(outliers_method, threshold)
+        self.detect_outliers(outliers_method, threshold)
 
         logging.info("Data cleaning and validation process completed. The dataset is now ready for further analysis.")
         return self.df
@@ -170,27 +169,27 @@ class DataChecker:
 
         return self.df
 
-    def validate_data_types(self):
+    def validate_data_types(self, valid_dtypes):
         """
       This method validates that the columns have expected data types.
       """
-        expected_dtype = "float64"
+        valid_dtypes = ["int64", "float64"]
 
         # identify non-numeric columns, excluding the time column
         non_numeric_cols = [
             col for col in self.df.columns 
-            if col != self.time_column and not pd.api.types.is_numeric_dtype(self.df[col].dtype)
-        ]
+            if col != self.time_column and not pd.api.types.is_numeric_dtype(self.df[col].dtype)]
+    
         if non_numeric_cols:
             log_and_raise_error(f"Non-numeric columns detected (excluding time column): {non_numeric_cols}")
 
-        # identify numeric columns that are not of the expected type
+        # identify numeric columns that are not of the expected types
         invalid_numeric_cols = [
             col for col in self.df.columns 
-            if col != self.time_column and self.df[col].dtype != expected_dtype
-        ]
+            if col != self.time_column and str(self.df[col].dtype) not in valid_dtypes]
+        
         if invalid_numeric_cols:
-            log_and_raise_error(f"Numeric columns with unexpected types detected (not {expected_dtype}): {invalid_numeric_cols}")
+            log_and_raise_error(f"Numeric columns with unexpected types detected (not in {valid_dtypes}): {invalid_numeric_cols}")
 
         return self.df
 
