@@ -102,9 +102,16 @@ class DataChecker:
                         # create a custom function to apply
                         def centered_rolling_func(row):
                             current_time = row.name
-                            start_time = current_time - window_offset
-                            end_time = current_time + window_offset
-                            window_data = self.df[column][start_time:end_time]
+                            start_time = max(current_time - window_offset, self.df.index.min())
+                            end_time = min(current_time + window_offset, self.df.index.max())
+
+                            if not (start_time <= end_time):
+                                return None
+
+                            window_data = self.df.loc[start_time:end_time, column]
+                            if window_data.empty:
+                                return None
+
                             if fill_method == "mean":
                                 return round(window_data.mean(), 1)
                             elif fill_method == "median":

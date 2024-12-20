@@ -4,15 +4,15 @@ from utils.logging_setup import log_and_raise_error
 from data_manager.loaders.data_loader import load_data
 from data_manager.preprocessing.time_preprocessor import TimePreprocessor
 
-class DataLoader:
+class PartialDataLoader:
     def __init__(self, file_path, sensors, time_column, time_format, check_duplicates_keep):
         self.file_path = file_path
         self.sensors = sensors
         self.time_column = time_column
         self.time_format = time_format
         self.check_duplicates_keep = check_duplicates_keep
-        self.filtered_time = None
         self.time_data_checker = None
+        self.filtered_time = None
 
     def _initialize_time_column(self):
         """
@@ -66,17 +66,16 @@ class DataLoader:
         # step 1: determine the row range based on the date range
         (start_row_index, end_row_index), filtered_time = self._find_date_rows(start_date, end_date)
 
-        # Step 2: load only the necessary rows and columns based on these indices
+        # step 2: load only the necessary rows and columns based on these indices
         data = load_data(self.file_path).read_file(
             skiprows=range(1, start_row_index),
             nrows=end_row_index - start_row_index + 1,
-            columns=self.sensors
-        )
+            columns=self.sensors)
 
-        # Step 3: add the time column
+        # step 3: add the time column
         data[self.time_column] = filtered_time.values
 
-        # Step 4: reorder columns to make the time column the first one
+        # step 4: reorder columns to make the time column the first one
         columns_order = [self.time_column] + [col for col in data.columns if col != self.time_column]
         data = data[columns_order]
 
