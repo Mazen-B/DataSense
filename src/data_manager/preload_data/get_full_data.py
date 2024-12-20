@@ -39,5 +39,6 @@ class FullDataLoader:
         if filtered_data.empty:
             log_and_raise_error(f"No data found in the specified date range: {start_date} to {end_date}")
 
+        logging.info(f"Extracted date range from {start_date} to {end_date}.")
         logging.info(f"DataFrame was filtered to the needed date range and columns.")
         return filtered_data

@@ -10,7 +10,7 @@ class ExcelFileReader(BaseFileReader):
       """
         try:
             data = pd.read_excel(self.file_path, usecols=columns, skiprows=skiprows, nrows=nrows)
-            if skiprows is None and nrows is None:
+            if not skiprows and not nrows and len(columns) == 1:
                 logging.info(f"Successfully read Excel file: {self.file_path} with only the '{columns[0]}' column.")
             else:
                 logging.info(f"Successfully read the Excel CSV with specified column(s): {columns}, for the extracted time range.")
