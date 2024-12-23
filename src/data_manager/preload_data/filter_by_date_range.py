@@ -20,10 +20,26 @@ class PartialDataLoader:
       """
         # load only the time column from the dataset
         time_data = load_data(self.file_path).read_file(columns=[self.time_column])
-        self.time_data_checker = TimePreprocessor(time_data, self.time_column, self.time_format)
 
-        # process the time column + convert it to series
-        self.filtered_time = self.time_data_checker.process_time_column(self.check_duplicates_keep).index.to_series()
+        # reset index to track row positions
+        time_data.reset_index(inplace=True)
+        time_data.rename(columns={"index": "original_row_index"}, inplace=True)
+        time_data["original_row_index"] += 1 # +1 for the header line
+
+        # process the time column
+        self.time_data_checker = TimePreprocessor(time_data, self.time_column, self.time_format)
+        processed_time = self.time_data_checker.process_time_column(self.check_duplicates_keep)
+
+        # reset index to return the "time" as a column
+        processed_time.reset_index(drop=False, inplace=True)
+        processed_time.rename(columns={"index": self.time_column}, inplace=True)
+
+        # set the "original_row_index" as index again
+        processed_time.set_index("original_row_index", inplace=True)
+
+        # create a series for filtering
+        self.filtered_time = processed_time[self.time_column]
+
         
     def _find_date_rows(self, start_date, end_date=None):
         """
@@ -47,16 +63,15 @@ class PartialDataLoader:
             else:
                 log_and_raise_error(f"No data found in the specified date range: {start_date} to {end_date}")
 
-        # get start and end indices for the matching range
-        start_row_timestamp  = matching_rows.index.min()
-        end_row_timestamp = matching_rows.index.max()
+        # get row indices
+        start_row_index = matching_rows.index.min()
+        end_row_index = matching_rows.index.max()
 
-        # get integer indices for start and end rows
-        start_row_index = matching_rows.index.get_loc(start_row_timestamp)
-        end_row_index = matching_rows.index.get_loc(end_row_timestamp)
+        # get corresponding times
+        start_time = matching_rows.loc[start_row_index]
+        end_time = matching_rows.loc[end_row_index]
 
-        logging.info(f"Extracted date range from {start_row_timestamp} to {end_row_timestamp}.")
-
+        logging.info(f"Extracted date range from {start_time} (row {start_row_index}) till {end_time} (row {end_row_index}).")
         return (start_row_index, end_row_index), matching_rows
 
     def get_filtered_data(self, start_date, end_date=None):
@@ -72,7 +87,7 @@ class PartialDataLoader:
             nrows=end_row_index - start_row_index + 1,
             columns=self.sensors)
 
-        # step 3: add the time column
+        # step 3: align time column
         data[self.time_column] = filtered_time.values
 
         # step 4: reorder columns to make the time column the first one
