@@ -4,14 +4,14 @@ from data_manager.preprocessing.core_preprocessor import DataChecker
 from data_manager.preload_data.get_full_data import FullDataLoader
 
 class DataProcessor:
-    def __init__(self, input_file, output_dir, time_column, time_format, sensors, core_processing_par, check_duplicates_keep):
+    def __init__(self, input_file, output_dir, time_column, time_format, sensors, core_processing_par, time_processing_par):
         self.input_file = input_file
         self.output_dir = output_dir
         self.time_column = time_column
         self.time_format = time_format
         self.sensors_dict = sensors
         self.core_processing_par = core_processing_par
-        self.check_duplicates_keep = check_duplicates_keep
+        self.time_processing_par = time_processing_par
 
     def _get_sensors(self):
         """
@@ -31,7 +31,7 @@ class DataProcessor:
       """
         # step 1: partially load the data (returns only the needed columns and rows)
         sensors_combined = self._get_sensors()
-        dates_data_preparer = PartialDataLoader(self.input_file, sensors_combined, self.time_column, self.time_format, self.check_duplicates_keep)
+        dates_data_preparer = PartialDataLoader(self.input_file, sensors_combined, self.time_column, self.time_format, self.time_processing_par)
         filtered_data = dates_data_preparer.get_filtered_data(start_date, end_date)
 
         # step 2: preprocess and clean the filtered data
@@ -56,7 +56,7 @@ class DataProcessor:
       """
         # step 1: load the data (for only the needed columns)
         sensors_combined = self._get_sensors()
-        dates_data_preparer = FullDataLoader(self.input_file, sensors_combined, self.time_column, self.time_format, self.check_duplicates_keep)
+        dates_data_preparer = FullDataLoader(self.input_file, sensors_combined, self.time_column, self.time_format, self.time_processing_par)
         filtered_data = dates_data_preparer.get_filtered_data()
 
         # step 2: preprocess and clean the filtered data

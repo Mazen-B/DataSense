@@ -119,8 +119,8 @@ def validate_pre_processing(pre_processing):
     if detect_outliers:
         validate_detect_outliers(detect_outliers)
 
-    check_duplicates = pre_processing.get("check_duplicates", {})
-    validate_check_duplicates(check_duplicates)
+    time_col_config = pre_processing.get("time_col", {})
+    validate_time_col(time_col_config)
 
 def validate_handle_missing_values(hmv_config):
     """
@@ -157,10 +157,18 @@ def validate_detect_outliers(do_config):
     if "threshold" in do_config and not isinstance(do_config["threshold"], (int, float)):
         log_and_raise_error("Invalid 'threshold': must be a numeric value.")
 
-def validate_check_duplicates(cd_config):
+def validate_time_col(time_col_config):
     """
-  This function validates the check_duplicates section.
+  This function validates the time_col section in the config
   """
+    # check "check_duplicates_keep"
     valid_keep_options = ["first", "last", None]
-    if cd_config.get("keep") not in valid_keep_options:
-        log_and_raise_error(f"Invalid 'keep': must be one of {valid_keep_options}.")
+    keep_option = time_col_config.get("check_duplicates_keep")
+    if keep_option not in valid_keep_options:
+        log_and_raise_error(f"Invalid 'check_duplicates_keep': must be one of {valid_keep_options}.")
+
+    # check "handle_missing_values"
+    valid_handle_missing = ["error", "drop"]
+    handle_missing = time_col_config.get("handle_missing_values")
+    if handle_missing not in valid_handle_missing:
+        log_and_raise_error(f"Invalid 'handle_missing_values': must be one of {valid_handle_missing}.")

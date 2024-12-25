@@ -53,9 +53,11 @@ def get_yaml_input(config, single_date=False, time_range=False):
     missing_values_time_window = pre_processing["handle_missing_values"]["time_window"]
     detect_outliers_method = pre_processing.get("detect_outliers", {}).get("method")
     detect_outliers_threshold = pre_processing.get("detect_outliers", {}).get("threshold")
-    check_duplicates_keep = pre_processing["check_duplicates"]["keep"]
+    check_duplicates_keep = pre_processing["time_col"]["check_duplicates_keep"]
+    time_col_missing_values = pre_processing["time_col"]["handle_missing_values"]
     core_processing_par = [missing_values_strategy, missing_values_fill_method, missing_values_fill_value,
         missing_values_time_window, detect_outliers_method, detect_outliers_threshold]
+    time_processing_par = [check_duplicates_keep, time_col_missing_values]
 
     # create the output dir if it does not exist
     create_output_dir(output_dir)
@@ -63,12 +65,12 @@ def get_yaml_input(config, single_date=False, time_range=False):
     if single_date:
         # for "single_day" mode
         date = config["date"]
-        return input_file, output_dir, time_column, time_format, sensors, date, core_processing_par, check_duplicates_keep
+        return input_file, output_dir, time_column, time_format, sensors, date, core_processing_par, time_processing_par
     elif time_range:
         # for "time_range" mode 
         start_date = config["start_date"]
         end_date = config["end_date"]
-        return input_file, output_dir, time_column, time_format, sensors, start_date, end_date, core_processing_par, check_duplicates_keep
+        return input_file, output_dir, time_column, time_format, sensors, start_date, end_date, core_processing_par, time_processing_par
     else:
         # for "full_data" mode 
-        return input_file, output_dir, time_column, time_format, sensors, core_processing_par, check_duplicates_keep
+        return input_file, output_dir, time_column, time_format, sensors, core_processing_par, time_processing_par

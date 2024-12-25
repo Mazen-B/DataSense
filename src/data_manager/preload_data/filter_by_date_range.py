@@ -5,12 +5,12 @@ from data_manager.loaders.data_loader import load_data
 from data_manager.preprocessing.time_preprocessor import TimePreprocessor
 
 class PartialDataLoader:
-    def __init__(self, file_path, sensors, time_column, time_format, check_duplicates_keep):
+    def __init__(self, file_path, sensors, time_column, time_format, time_processing_par):
         self.file_path = file_path
         self.sensors = sensors
         self.time_column = time_column
         self.time_format = time_format
-        self.check_duplicates_keep = check_duplicates_keep
+        self.time_processing_par = time_processing_par
         self.time_data_checker = None
         self.filtered_time = None
 
@@ -28,7 +28,8 @@ class PartialDataLoader:
 
         # process the time column
         self.time_data_checker = TimePreprocessor(time_data, self.time_column, self.time_format)
-        processed_time = self.time_data_checker.process_time_column(self.check_duplicates_keep)
+        
+        processed_time = self.time_data_checker.process_time_column(self.time_processing_par)
 
         # reset index to return the "time" as a column
         processed_time.reset_index(drop=False, inplace=True)

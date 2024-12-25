@@ -75,9 +75,13 @@ The logging setup records information both to the console and to rotating log fi
     - [ ] flag the outlier or remove them (with None option)
     - [x] add a section in the conf file for the prepresessing options
     - **preload**:
-    - [ ] have the full data option
+    - [x] have the full data option
+    - [ ] set_index=True for time col but not for other cols processing
   - **time_processing**:
     - [x] in get_filtered_data, we need to only load the needed columns for a specific time range
 - ### Unit tests 
   - [ ] for conf logic
   - [ ] for data manamgenemt logic
+
+# i need to test what we have, especially the values that i am replacing, maybe it is time for unit tests
+# Unknown in case of onecoding what to do with that? should it just be 3??

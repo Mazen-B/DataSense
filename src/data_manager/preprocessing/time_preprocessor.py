@@ -8,21 +8,26 @@ class TimePreprocessor:
         self.time_column = time_column
         self.time_format = time_format
 
-    def process_time_column(self, keep):
+    def process_time_column(self, time_processing_par, set_index=True):
         """
       This is the initial filtering step that processes the time column by converting to datetime, sorting, checking duplicates, and validating.
       """
+        keep = time_processing_par[0]
+        handle_missing = time_processing_par[1]
+        
         logging.info(f"Starting the initial filtering and processing of the '{self.time_column}' column.")
 
         self.validate_time_column()
+        self.handle_missing_values(handle_missing)
         self.convert_to_datetime()
+        self.handle_failed_datetime_conversion()
         self.order_time_column()
         self.check_duplicates(keep)
-      
-        # set the time column as the index
-        self.df.set_index(self.time_column, inplace=True)
-    
-        logging.info(f"The '{self.time_column}' column has been processed, indexed and converted into series.")
+
+        if set_index:
+            self.df.set_index(self.time_column, inplace=True)
+
+        logging.info(f"The '{self.time_column}' column has been processed, indexed, and converted into a time-series.")
         return self.df
 
     def validate_time_column(self):
@@ -35,18 +40,44 @@ class TimePreprocessor:
         if self.time_column not in self.df.columns:
             log_and_raise_error(f"The specified time column '{self.time_column}' does not exist in the DataFrame.")
         
+        if not pd.api.types.is_string_dtype(self.df[self.time_column]) and \
+           not pd.api.types.is_datetime64_any_dtype(self.df[self.time_column]) and \
+           not pd.api.types.is_numeric_dtype(self.df[self.time_column]):
+            log_and_raise_error(f"The time column '{self.time_column}' contains unsupported data types. "
+                                 "Supported types are string, datetime, or numeric.")
+
+    def handle_missing_values(self, method):
+        """
+      This method handles missing values in the time column based on the specified method (error or drop).
+      """
         if self.df[self.time_column].isna().any():
             missing_count = self.df[self.time_column].isna().sum()
-            log_and_raise_error(f"The time column '{self.time_column}' contains {missing_count} missing (NaN) values. Please clean the data before processing.")
+            if method == "drop":
+                logging.warning(f"Dropping {missing_count} rows with missing values in the '{self.time_column}' column.")
+                self.df = self.df.dropna(subset=[self.time_column])
+            else:
+                log_and_raise_error(f"The time column '{self.time_column}' contains {missing_count} missing (NaN) values. "
+                                    "Please clean the data or set 'handle_missing' to 'drop'.")
 
-    def convert_to_datetime(self, errors="raise"):
+    def convert_to_datetime(self, errors="coerce"):
         """
       This method converts the date column to datetime format using the specified time format.
       """
         try:
-            self.df[self.time_column] = pd.to_datetime(self.df[self.time_column], format=self.time_format, errors=errors)
+            self.df.loc[:, self.time_column] = pd.to_datetime(self.df[self.time_column], format=self.time_format, errors=errors)        
         except Exception as e:
             log_and_raise_exception(f"Error converting '{self.time_column}' to datetime: {e}")
+
+    def handle_failed_datetime_conversion(self):
+        """
+      This method handles rows where datetime conversion failed (set to NaT). Logs details and drops or raises an error.
+      """
+        failed_count = self.df[self.time_column].isna().sum()
+        if failed_count > 0:
+            failed_rows = self.df[self.df[self.time_column].isna()]
+            logging.warning(f"{failed_count} rows failed datetime conversion and have been set to NaT.")
+            logging.debug(f"Rows with failed datetime conversion: {failed_rows}")
+            log_and_raise_error(f"Failed to convert {failed_count} rows to datetime. Inspect or clean these rows.")
 
     def order_time_column(self):
         """
@@ -73,18 +104,14 @@ class TimePreprocessor:
             
             if keep is None:
                 # issue a warning with detailed duplicate time values
-                logging.warning(
-                    f"Duplicates in column '{self.time_column}' were found but not removed as 'keep=None' was specified. "
-                    f"Duplicated time values: {list(duplicated_times)}"
-                )
+                logging.warning(f"Duplicates in column '{self.time_column}' were found but not removed as 'keep=None' was specified. "
+                                f"Duplicated time values: {list(duplicated_times)}")
                 return self.df
             else:
                 try:
                     # remove duplicates based on the "keep" parameter
-                    logging.warning(
-                        f"{duplicate_count} duplicate rows were found in the '{self.time_column}' column and removed. "
-                        f"Duplicated time values: {list(duplicated_times)}"
-                    )
+                    logging.warning(f"{duplicate_count} duplicate rows were found in the '{self.time_column}' column and removed. "
+                                    f"Duplicated time values: {list(duplicated_times)}")
                     self.df = self.df.drop_duplicates(subset=[self.time_column], keep=keep)
                 except Exception as e:
                     log_and_raise_exception(f"Failed to remove duplicates based on '{self.time_column}': {str(e)}")
