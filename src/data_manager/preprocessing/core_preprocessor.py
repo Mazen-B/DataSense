@@ -16,6 +16,7 @@ class DataChecker:
         
         strategy, fill_method, fill_value, time_window, outliers_method, threshold = core_processing_par
 
+        self.standardize_column_names()
         self.validate_columns()
         self.handle_missing_values(strategy, fill_method, fill_value, time_window)
         self.encode_categorical_and_booleans()
@@ -23,6 +24,27 @@ class DataChecker:
         self.detect_outliers(outliers_method, threshold)
 
         logging.info("Data cleaning and validation process completed. The dataset is now ready for further analysis.")
+        return self.df
+
+    def standardize_column_names(self):
+        """
+      This method standardizes column names by making them lowercase, tripping leading/trailing spaces, 
+      and replacing spaces with underscores.
+      """
+        try:
+            if not isinstance(self.df, pd.DataFrame):
+                log_and_raise_error("Data format error: 'self.df' is not a DataFrame.")
+            
+            self.df.columns = (
+                self.df.columns.str.strip()  # remove leading/trailing spaces
+                            .str.lower()  # convert to lowercase
+                            .str.replace(" ", "_", regex=False)  # replace spaces with underscores
+            )
+        except AttributeError as e:
+            log_and_raise_exception(f"Attribute error in 'standardize_column_names': {str(e)}")
+        except Exception as e:
+            log_and_raise_exception(f"Unexpected error in 'standardize_column_names': {str(e)}")
+        
         return self.df
 
     def validate_columns(self):
@@ -33,9 +55,15 @@ class DataChecker:
         if self.time_column:
             required_columns.append(self.time_column)
         
+        # Check for missing columns
         missing_columns = [col for col in required_columns if col not in self.df.columns]
         if missing_columns:
             log_and_raise_error(f"Missing columns in data: {missing_columns}")
+        
+        # Check for columns that are completely empty
+        empty_columns = [col for col in required_columns if self.df[col].isna().all()]
+        if empty_columns:
+            log_and_raise_error(f"The following columns are completely empty: {empty_columns}")
 
         return self.df
 
@@ -43,8 +71,8 @@ class DataChecker:
         """
       This method handles missing values in the DataFrame for all columns.
       We can have the follwing args:
-        strategy: Strategy to handle missing values, either "drop" or "fill". Default is "drop".
-        fill_method: Method to fill missing values, such as "mean", "median", "mode", "constant", or "interpolate".
+        strategy: Strategy to handle missing values, either "drop" or "fill".
+        fill_method: Method to fill missing values, such as "ffill", "bfill", "mean", "median", "mode", "constant", or "interpolate".
         fill_value: Value to use if fill_method is "constant".
         time_window: Optional. A Pandas offset string (e.g., "1min", "5min") to specify a rolling window for calculating replacement values.
       """
@@ -191,9 +219,8 @@ class DataChecker:
             log_and_raise_error(f"Non-numeric columns detected (excluding time column): {non_numeric_cols}")
 
         # identify numeric columns that are not of the expected types
-        invalid_numeric_cols = [
-            col for col in self.df.columns 
-            if col != self.time_column and str(self.df[col].dtype) not in valid_dtypes]
+        invalid_numeric_cols = [col for col in self.df.columns 
+                                if col != self.time_column and str(self.df[col].dtype) not in valid_dtypes]
         
         if invalid_numeric_cols:
             log_and_raise_error(f"Numeric columns with unexpected types detected (not in {valid_dtypes}): {invalid_numeric_cols}")
@@ -233,22 +260,3 @@ class DataChecker:
                 logging.warning(f"Sensor column '{col}' not found in DataFrame.")
         return self.df
 
-    def standardize_column_names(self):
-        """
-      This method standardizes column names by making them lowercase, tripping leading/trailing spaces, and replacing spaces with underscores.
-      """
-        try:
-            if not isinstance(self.df, pd.DataFrame):
-                log_and_raise_error("Data format error: 'self.df' is not a DataFrame.")
-            
-            self.df.columns = (
-                self.df.columns.str.strip()  # remove leading/trailing spaces
-                            .str.lower()  # convert to lowercase
-                            .str.replace(" ", "_", regex=False)  # replace spaces with underscores
-            )
-        except AttributeError as e:
-            log_and_raise_exception(f"Attribute error in 'standardize_column_names': {str(e)}")
-        except Exception as e:
-            log_and_raise_exception(f"Unexpected error in 'standardize_column_names': {str(e)}")
-        
-        return self.df
