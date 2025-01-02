@@ -127,7 +127,7 @@ def validate_handle_missing_values(hmv_config):
   This function validates the handle_missing_values section.
   """
     valid_strategies = ["drop", "fill"]
-    valid_fill_methods = ["mean", "median", "mode", "constant", "interpolate"]
+    valid_fill_methods = ["ffill", "bfill", "mean", "median", "mode", "constant", "interpolate"]
 
     strategy = hmv_config.get("strategy")
     if strategy not in valid_strategies:

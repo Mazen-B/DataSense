@@ -37,11 +37,11 @@ class DataChecker:
             
             self.df.columns = (
                 self.df.columns.str.strip()  # remove leading/trailing spaces
-                            .str.lower()  # convert to lowercase
-                            .str.replace(" ", "_", regex=False)  # replace spaces with underscores
+                               .str.lower()  # convert to lowercase
+                               .str.replace(" ", "_", regex=False)  # replace spaces with underscores
             )
         except AttributeError as e:
-            log_and_raise_exception(f"Attribute error in 'standardize_column_names': {str(e)}")
+            log_and_raise_error(f"Attribute error in 'standardize_column_names': {str(e)}")
         except Exception as e:
             log_and_raise_exception(f"Unexpected error in 'standardize_column_names': {str(e)}")
         
@@ -55,12 +55,12 @@ class DataChecker:
         if self.time_column:
             required_columns.append(self.time_column)
         
-        # Check for missing columns
+        # check for missing columns
         missing_columns = [col for col in required_columns if col not in self.df.columns]
         if missing_columns:
             log_and_raise_error(f"Missing columns in data: {missing_columns}")
         
-        # Check for columns that are completely empty
+        # check for columns that are completely empty
         empty_columns = [col for col in required_columns if self.df[col].isna().all()]
         if empty_columns:
             log_and_raise_error(f"The following columns are completely empty: {empty_columns}")
@@ -76,124 +76,63 @@ class DataChecker:
         fill_value: Value to use if fill_method is "constant".
         time_window: Optional. A Pandas offset string (e.g., "1min", "5min") to specify a rolling window for calculating replacement values.
       """
-        # get numeric columns, excluding the time column
-        numeric_columns = self.df.select_dtypes(include=["number"]).columns.drop(self.time_column, errors="ignore")
-
-        # additioanl check for NaT values in the time column
-        if self.df[self.time_column].isna().any():
-            log_and_raise_error(f"Time column '{self.time_column}' contains invalid or missing values (NaT).")
-
+        self._validate_time_column()
         self.df = self.df.set_index(self.time_column)
 
-        for column in numeric_columns:
-            if strategy == "drop":
-                missing_count = self.df[column].isna().sum()
-                if missing_count > 0:
-                    logging.warning(f"{missing_count} missing values found in '{column}', dropping rows.")
-                self.df = self.df.dropna(subset=[column])
+        numeric_columns = self._get_numeric_columns()
 
-            elif strategy == "fill":
-                missing_count = self.df[column].isna().sum()
-                if missing_count > 0:
-                    logging.warning(f"{missing_count} missing values found in '{column}', handling with '{fill_method}'.")
+        if strategy == "drop":
+            self._drop_missing_values(numeric_columns)
+        elif strategy == "fill":
+            self._fill_missing_values(numeric_columns, fill_method, fill_value, time_window)
+        else:
+            log_and_raise_error(f"Unknown strategy '{strategy}' provided for handling missing values.")
 
-                if time_window is None:
-                    # apply global replacement
-                    if fill_method == "ffill":
-                        self.df[column] = self.df[column].fillna(method="ffill")
-                    elif fill_method == "bfill":
-                        self.df[column] = self.df[column].fillna(method="bfill")
-                    elif fill_method == "mean":
-                        mean_value = round(self.df[column].mean(), 1)
-                        self.df[column] = self.df[column].fillna(mean_value)
-                    elif fill_method == "median":
-                        median_value = round(self.df[column].median(), 1)
-                        self.df[column] = self.df[column].fillna(median_value)
-                    elif fill_method == "mode":
-                        mode_value = self.df[column].mode()
-                        if not mode_value.empty:
-                            self.df[column] = self.df[column].fillna(mode_value[0])
-                        else:
-                            logging.warning(f"Cannot compute mode for column '{column}', skipping.")
-                    elif fill_method == "constant":
-                        if fill_value is None:
-                            log_and_raise_error("No 'fill_value' provided for filling missing values with a constant.")
-                        self.df[column] = self.df[column].fillna(fill_value)
-                    elif fill_method == "interpolate":
-                        self.df[column] = self.df[column].interpolate()
-                    else:
-                        log_and_raise_error(f"Unknown fill_method '{fill_method}' provided.")
-                else:
-                    if fill_method in ["mean", "median", "mode"]:
-                        window_offset = pd.Timedelta(time_window) / 2
-
-                        # create a custom function to apply
-                        def centered_rolling_func(row):
-                            current_time = row.name
-                            start_time = max(current_time - window_offset, self.df.index.min())
-                            end_time = min(current_time + window_offset, self.df.index.max())
-
-                            if not (start_time <= end_time):
-                                return None
-
-                            window_data = self.df.loc[start_time:end_time, column]
-                            if window_data.empty:
-                                return None
-
-                            if fill_method == "mean":
-                                return round(window_data.mean(), 1)
-                            elif fill_method == "median":
-                                return round(window_data.median(), 1)
-                            elif fill_method == "mode":
-                                mode_value = window_data.mode()
-                                return mode_value.iloc[0] if not mode_value.empty else None
-
-                        # apply the custom function only to missing values
-                        missing_indices = self.df[self.df[column].isna()].index
-                        filled_values = self.df.loc[missing_indices].apply(centered_rolling_func, axis=1)
-                        self.df.loc[missing_indices, column] = filled_values
-
-                        # check for any remaining missing values in the column
-                        remaining_missing = self.df[column].isna().sum()
-                        if remaining_missing > 0:
-                            log_and_raise_error(f"After filling, {remaining_missing} missing values remain in '{column}' (try increasing the time_window value).")
-                    else:
-                        log_and_raise_error(f"Unsupported fill_method '{fill_method}' with time_window.")
-            else:
-                log_and_raise_error(f"Unknown strategy '{strategy}' provided for handling missing values.")
-
-        # reset the index to restore the time column
+        # reset index to restore the time column
         self.df = self.df.reset_index()
 
         return self.df
 
     def encode_categorical_and_booleans(self):
         """
-      This method encodes non-numeric columns into numerical representations.
+        This method encodes non-numeric columns into numerical representations.
         - Boolean-like values (True/False) are converted to 1/0.
         - Binary categorical values (e.g., ON/OFF) are mapped to 1/0.
         - Multi-class categorical values are encoded as integers.
-      """
+        - Missing values in non-numeric columns are filled with the mode.
+        """
         for column in self.df.columns:
             if column == self.time_column:
                 continue
+
+            # check for missing values and fill with mode if necessary
+            missing_count = self.df[column].isna().sum()
+            if missing_count > 0:
+                mode_value = self.df[column].mode()
+                if not mode_value.empty:
+                    logging.warning(f"Filling {missing_count} missing values in column '{column}' with mode value '{mode_value.iloc[0]}'.")
+                    self.df[column] = self.df[column].fillna(mode_value.iloc[0])
+                    print("what is the new shit: ", self.df[column])
+                else:
+                    logging.warning(f"Cannot compute mode for column '{column}' due to empty or invalid data; missing values remain.")
+
             col_dtype = self.df[column].dtype
 
             # boolean columns
             if col_dtype == "bool":
                 logging.info(f"Encoding boolean column '{column}' as integers.")
                 self.df[column] = self.df[column].astype(int)
-
+    
             # object or string-based columns
             elif col_dtype == "object" or str(col_dtype).startswith("string"):
                 unique_values = self.df[column].dropna().unique()
-                
-                # if binary categorical (e.g., ON/OFF, Yes/No, etc.)
+            
+                # binary categorical (e.g., ON/OFF, Yes/No)
                 if len(unique_values) == 2:
                     logging.info(f"Encoding binary categorical column '{column}' as integers.")
                     self.df[column] = self.df[column].map({unique_values[0]: 0, unique_values[1]: 1})
-                
-                # if multi-class categorical
+           
+                # multi-class categorical
                 else:
                     logging.info(f"Encoding multi-class categorical column '{column}' with unique values: {unique_values}.")
                     self.df[column] = self.df[column].astype("category").cat.codes
@@ -260,3 +199,109 @@ class DataChecker:
                 logging.warning(f"Sensor column '{col}' not found in DataFrame.")
         return self.df
 
+    # --- Helper Methods ---
+    def _validate_time_column(self):
+        """
+      This helper method validates the time column for missing or invalid values.
+      """
+        if self.time_column and self.df[self.time_column].isna().any():
+            log_and_raise_error(f"Time column '{self.time_column}' contains invalid or missing values (NaT).")
+
+    def _get_numeric_columns(self):
+        """
+      This helper method returns numeric columns, excluding the time column.
+      """
+        return self.df.select_dtypes(include=["number"]).columns.drop(self.time_column, errors="ignore")
+
+    def _drop_missing_values(self, columns):
+        """
+      This helper method drops rows with missing values in the specified columns.
+      """
+        missing_counts = self.df[columns].isna().sum()
+        total_missing_rows = self.df[columns].isna().any(axis=1).sum()
+        if total_missing_rows > 0:
+            logging.warning(f"Found {total_missing_rows} rows with missing values in numeric columns: {missing_counts.to_dict()}. Dropping these rows.")
+            self.df = self.df.dropna(subset=columns)
+
+    def _fill_missing_values(self, columns, fill_method, fill_value, time_window):
+        """
+      This helper method fills missing values in the specified columns using the given method.
+      """
+        # additional checks for the fill method and time window
+        if fill_method not in ["ffill", "bfill", "mean", "median", "mode", "constant", "interpolate"]:
+            log_and_raise_error(f"Invalid fill method '{fill_method}' provided.")
+        
+        if time_window is not None and not isinstance(time_window, str):
+            log_and_raise_error(f"Invalid time_window '{time_window}'. Must be a valid Pandas offset string (e.g., '1min', '5min').")
+
+        for column in columns:
+            missing_count = self.df[column].isna().sum()
+            if missing_count == 0:
+                continue
+            
+            logging.warning(f"{missing_count} missing values found in '{column}', handling with '{fill_method}'.")
+
+            try:
+                if time_window is None:
+                    self._apply_global_fill(column, fill_method, fill_value)
+                elif time_window is not None and fill_method in ["mean", "median"]:
+                    self._apply_time_based_fill(column, fill_method, time_window)
+                else:
+                    log_and_raise_error(f"Unsupported combination of fill_method '{fill_method}' and time_window '{time_window}' for column '{column}'.")
+            except Exception as e:
+                logging.error(f"Failed to handle missing values in column '{column}' using method '{fill_method}': {e}")
+
+    def _apply_global_fill(self, column, fill_method, fill_value):
+        """
+      This helper method fills missing values globally using the specified fill method.
+      """
+        if fill_method == "ffill":
+            self.df[column] = self.df[column].fillna(method="ffill")
+        elif fill_method == "bfill":
+            self.df[column] = self.df[column].fillna(method="bfill")
+        elif fill_method == "mean":
+            self.df[column] = self.df[column].fillna(self.df[column].mean())
+        elif fill_method == "median":
+            self.df[column] = self.df[column].fillna(self.df[column].median())
+        elif fill_method == "mode":
+            mode_value = self.df[column].mode()
+            if not mode_value.empty:
+                self.df[column] = self.df[column].fillna(mode_value[0])
+            else:
+                logging.warning(f"Cannot compute mode for column '{column}', skipping.")
+        elif fill_method == "constant":
+            if fill_value is None:
+                log_and_raise_error("No 'fill_value' provided for filling missing values with a constant.")
+            self.df[column] = self.df[column].fillna(fill_value)
+        elif fill_method == "interpolate":
+            self.df[column] = self.df[column].interpolate()
+        else:
+            log_and_raise_error(f"Unknown fill_method '{fill_method}' provided.")
+
+    def _apply_time_based_fill(self, column, fill_method, time_window):
+        """
+      This helper method fills missing values based on a centered rolling time window.
+      """
+        try:
+            # apply rolling operation for mean or median
+            if fill_method in ["mean", "median"]:
+                rolling_result = (self.df[column]
+                    .rolling(window=time_window, center=True, min_periods=1)
+                    .agg(fill_method))
+                # fill missing values with rolling result
+                self.df[column] = self.df[column].fillna(rolling_result)
+
+            # fallback to ffill for remaining NaN values
+            remaining_missing = self.df[column].isna().sum()
+            if remaining_missing > 0:
+                logging.warning(f"{remaining_missing} missing values in column '{column}' after rolling {fill_method}. Falling back to forward fill (ffill).")
+                self.df[column] = self.df[column].fillna(method="ffill")
+
+            # final check for unfilled values
+            remaining_missing_final = self.df[column].isna().sum()
+            if remaining_missing_final > 0:
+                logging.warning(f"After applying rolling {fill_method} and ffill, {remaining_missing_final} missing values remain in '{column}'.")
+
+        except Exception as e:
+            logging.error(f"Error in time-based fill for column '{column}': {e}")
+            raise
