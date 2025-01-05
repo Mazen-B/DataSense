@@ -21,26 +21,15 @@ class PartialDataLoader:
         # load only the time column from the dataset
         time_data = load_data(self.file_path).read_file(columns=[self.time_column])
 
-        # reset index to track row positions
-        time_data.reset_index(inplace=True)
-        time_data.rename(columns={"index": "original_row_index"}, inplace=True)
-        time_data["original_row_index"] += 1 # +1 for the header line
-
         # process the time column
         self.time_data_checker = TimePreprocessor(time_data, self.time_column, self.time_format)
-        
         processed_time = self.time_data_checker.process_time_column(self.time_processing_par)
 
-        # reset index to return the "time" as a column
-        processed_time.reset_index(drop=False, inplace=True)
-        processed_time.rename(columns={"index": self.time_column}, inplace=True)
-
-        # set the "original_row_index" as index again
-        processed_time.set_index("original_row_index", inplace=True)
+        # after cleaning, reset index with new filtered rows
+        processed_time.reset_index(inplace=True)
 
         # create a series for filtering
         self.filtered_time = processed_time[self.time_column]
-
         
     def _find_date_rows(self, start_date, end_date=None):
         """

@@ -8,7 +8,7 @@ class TimePreprocessor:
         self.time_column = time_column
         self.time_format = time_format
 
-    def process_time_column(self, time_processing_par, set_index=True):
+    def process_time_column(self, time_processing_par):
         """
       This is the initial filtering step that processes the time column by converting to datetime, sorting, checking duplicates, and validating.
       """
@@ -24,15 +24,13 @@ class TimePreprocessor:
         self.order_time_column()
         self.check_duplicates(keep)
 
-        if set_index:
-            self.df.set_index(self.time_column, inplace=True)
-
         logging.info(f"The '{self.time_column}' column has been processed, indexed, and converted into a time-series.")
         return self.df
 
     def validate_time_column(self):
         """
-      This method validates that the time column is not empty or entirely NaN before processing.
+      This method validates that the time column exists and contains valid data types.
+      Allows empty values (NaN), but ensures the column's non-empty values have supported types.
       """
         if self.df.empty:
             log_and_raise_error("The input DataFrame is empty. Please provide a valid DataFrame.")
@@ -40,11 +38,13 @@ class TimePreprocessor:
         if self.time_column not in self.df.columns:
             log_and_raise_error(f"The specified time column '{self.time_column}' does not exist in the DataFrame.")
         
-        if not pd.api.types.is_string_dtype(self.df[self.time_column]) and \
-           not pd.api.types.is_datetime64_any_dtype(self.df[self.time_column]) and \
-           not pd.api.types.is_numeric_dtype(self.df[self.time_column]):
-            log_and_raise_error(f"The time column '{self.time_column}' contains unsupported data types. "
-                                 "Supported types are string, datetime, or numeric.")
+        non_empty_values = self.df[self.time_column].dropna()
+        if not non_empty_values.empty:
+            if not pd.api.types.is_string_dtype(non_empty_values) and \
+            not pd.api.types.is_datetime64_any_dtype(non_empty_values) and \
+            not pd.api.types.is_numeric_dtype(non_empty_values):
+                log_and_raise_error(f"The time column '{self.time_column}' contains unsupported data types. "
+                                    "Supported types are string, datetime, or numeric.")
 
     def handle_missing_values(self, method):
         """

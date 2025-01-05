@@ -68,20 +68,18 @@ The logging setup records information both to the console and to rotating log fi
 - [x] more specific config with sections: processing, preprosessing and so on where we add all the needed inputs
 - ### DataManger-related
   - **loaders**:
+    - [x] have the full data option
     - [ ] load excel and csv we transform the columns into lower cases before we load (in original and request) - call the validation function from the the DataChecker class 
     - [ ] make loader more robust: abstract class add dask or Fireducks for the others
   - **preprocessing**:
     - [x] in core_preprocessing we need way more stuff if we want to work with statitics (one main method there)
-    - [ ] flag the outlier or remove them (with None option)
     - [x] add a section in the conf file for the prepresessing options
-    - **preload**:
-    - [x] have the full data option
-    - [ ] set_index=True for time col but not for other cols processing
+    - [x] in case of onecoding/categorical cols, add a logic that handle missing values
+    - [ ] flag the outlier or remove them (with None option)
+    - [ ] more comprehensive log msgs
+    - [x] drop is returning an error in the time column even removing duplications
   - **time_processing**:
     - [x] in get_filtered_data, we need to only load the needed columns for a specific time range
 - ### Unit tests 
   - [ ] for conf logic
-  - [ ] for data manamgenemt logic
-
-# i need to test what we have, especially the values that i am replacing, maybe it is time for unit tests
-# Unknown in case of onecoding what to do with that? should it just be 3??
+  - [ ] for data processing logic, especially the values that i am replacing

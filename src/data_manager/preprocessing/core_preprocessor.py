@@ -112,7 +112,6 @@ class DataChecker:
                 if not mode_value.empty:
                     logging.warning(f"Filling {missing_count} missing values in column '{column}' with mode value '{mode_value.iloc[0]}'.")
                     self.df[column] = self.df[column].fillna(mode_value.iloc[0])
-                    print("what is the new shit: ", self.df[column])
                 else:
                     logging.warning(f"Cannot compute mode for column '{column}' due to empty or invalid data; missing values remain.")
 
