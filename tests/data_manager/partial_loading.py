@@ -11,7 +11,7 @@ class TestPartialDataLoaderWithFile(unittest.TestCase):
 
     def setUp(self):
         self.time_column = "time"
-        self.file_path = "dummy_dataset.csv"
+        self.file_path = os.path.join("input_files", "dummy_dataset.csv")
         self.sensors = ["sensor_1", "sensor_2"]
         self.time_format="%Y-%m-%d %H:%M:%S"
         self.time_processing_par=["drop", "error"]
