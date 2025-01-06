@@ -14,14 +14,13 @@ class TestFullDataLoader(unittest.TestCase):
 
     def setUp(self):
         self.time_column = "time"
-        self.csv_file_path = os.path.join("input_files", "dummy_dataset.csv")
-        self.empty_dataset = os.path.join("input_files", "empty_dataset.csv")
+        self.csv_file_path = os.path.join("input", "dummy_dataset.csv")
+        self.empty_dataset = os.path.join("input", "empty_dataset.csv")
         self.sensors = ["sensor_1", "sensor_2"]
         self.time_format = "%Y-%m-%d %H:%M:%S"
         self.check_duplicates_keep = "first"
 
-    @patch("data_manager.loaders.data_loader.load_data")
-    def test_full_load_with_correct_data(self, mock_load_data):
+    def test_full_load_with_correct_data(self):
         """ 
       This test checks that FullDataLoader correctly loads the entire dataset with the expected columns.
       """
@@ -31,7 +30,6 @@ class TestFullDataLoader(unittest.TestCase):
             "sensor_1": [10, 20, 30, 40, 50],
             "sensor_2": [100, 200, 300, 400, 500]
         })
-        mock_load_data.return_value.read_file.return_value = mock_data
 
         loader = FullDataLoader(self.csv_file_path, self.sensors, self.time_column, self.time_format, self.check_duplicates_keep)
         filtered_data = loader.get_filtered_data()
@@ -65,8 +63,7 @@ class TestFullDataLoader(unittest.TestCase):
         result = load_data("dummy_dataset.xlsx")
         self.assertIsInstance(result, ExcelFileReader)
 
-    @patch("utils.logging_setup.log_and_raise_error")
-    def test_load_data_unsupported_file_format(self, mock_log_error):
+    def test_load_data_unsupported_file_format(self):
         """ 
       This test checks that load_data raises an error for unsupported file formats.
       """
