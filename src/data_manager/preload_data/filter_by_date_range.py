@@ -42,6 +42,10 @@ class PartialDataLoader:
         start_date = pd.to_datetime(start_date)
         end_date = pd.to_datetime(end_date) if end_date else start_date + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
 
+        # check if start_date is greater than end_date
+        if start_date > end_date:
+            log_and_raise_error(f"Invalid date range: start_date {start_date} is greater than end_date {end_date}")
+
         # create a mask to select the range within the Series
         date_mask = (self.filtered_time >= start_date) & (self.filtered_time <= end_date)
         matching_rows = self.filtered_time[date_mask]
@@ -73,7 +77,7 @@ class PartialDataLoader:
 
         # step 2: load only the necessary rows and columns based on these indices
         data = load_data(self.file_path).read_file(
-            skiprows=range(1, start_row_index),
+            skiprows=range(1, start_row_index + 1),
             nrows=end_row_index - start_row_index + 1,
             columns=self.sensors)
 

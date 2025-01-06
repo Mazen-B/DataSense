@@ -48,6 +48,8 @@ pre_processing:
   - Set the `mode` to define the data processing scope. Options:
     - **single_day**: Requires `date`.
     - **multi_days**: Requires `start_date` and `end_date`.
+    
+      **N.B.** When specifying both `start_date` and `end_date`, the `end_date` is exclusive. For example, if `end_date="2025-01-02"`, the data will include values up to but not including `2025-01-02 00:00:00`.
     - **full_data**: Processes the entire dataset without specific date restrictions.
 - **Sensors**: A list of sensor IDs to include in the analysis (at least one is needed).
 
