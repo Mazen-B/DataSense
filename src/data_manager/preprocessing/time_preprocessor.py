@@ -55,9 +55,11 @@ class TimePreprocessor:
             if method == "drop":
                 logging.warning(f"Dropping {missing_count} rows with missing values in the '{self.time_column}' column.")
                 self.df = self.df.dropna(subset=[self.time_column])
-            else:
+            elif method == "error":
                 log_and_raise_error(f"The time column '{self.time_column}' contains {missing_count} missing (NaN) values. "
                                     "Please clean the data or set 'handle_missing' to 'drop'.")
+            else:
+                log_and_raise_error(f"Invalid method: '{method}' for handling missing values in time column preprocessing, allowed method: error or drop.")               
 
     def convert_to_datetime(self, errors="coerce"):
         """
