@@ -22,6 +22,7 @@ class DataChecker:
         self.encode_categorical_and_booleans()
         self.validate_data_types()
         self.detect_outliers(outliers_method, threshold)
+        self.last_emptness_check()
 
         logging.info("Data cleaning and validation process completed. The dataset is now ready for further analysis.")
         return self.df
@@ -198,6 +199,22 @@ class DataChecker:
                 logging.warning(f"Sensor column '{col}' not found in DataFrame.")
         return self.df
 
+    def last_emptness_check(self):
+        """
+      This method checks for any remaining empty values in the DataFrame after the cleaning process.
+      If any empty values are found, it raises an error with details of the affected columns and timestamps.
+      """
+        empty_values = self.df.isna().sum()
+        total_empty = empty_values.sum()
+        
+        if total_empty > 0:
+            empty_rows_timestamps = self.df[self.df.isna().any(axis=1)].index.tolist()
+            empty_columns = empty_values[empty_values > 0].index.tolist()
+            
+            log_and_raise_error(
+                f"Data validation failed: {total_empty} empty values remain in columns {empty_columns} "
+                f"at the following timestamps: {empty_rows_timestamps}.")
+
     # --- Helper Methods ---
     def _validate_time_column(self):
         """
@@ -219,7 +236,11 @@ class DataChecker:
         missing_counts = self.df[columns].isna().sum()
         total_missing_rows = self.df[columns].isna().any(axis=1).sum()
         if total_missing_rows > 0:
-            logging.warning(f"Found {total_missing_rows} rows with missing values in numeric columns: {missing_counts.to_dict()}. Dropping these rows.")
+            missing_rows_timestamps = self.df[self.df[columns].isna().any(axis=1)].index.tolist()
+            logging.warning(
+                f"Found {total_missing_rows} rows to be dropped with missing values in these columns: {missing_counts.to_dict()}. "
+                f"for the following timestamps: {missing_rows_timestamps}."
+            )
             self.df = self.df.dropna(subset=columns)
 
     def _fill_missing_values(self, columns, fill_method, fill_value, time_window):
@@ -227,7 +248,8 @@ class DataChecker:
       This helper method fills missing values in the specified columns using the given method.
       """
         # additional checks for the fill method and time window
-        if fill_method not in ["ffill", "bfill", "mean", "median", "mode", "constant", "interpolate"]:
+        accepted_methods = ["ffill", "bfill", "mean", "median", "mode", "constant", "interpolate"]
+        if fill_method not in accepted_methods:
             log_and_raise_error(f"Invalid fill method '{fill_method}' provided.")
         
         if time_window is not None and not isinstance(time_window, str):
@@ -238,10 +260,14 @@ class DataChecker:
             if missing_count == 0:
                 continue
             
-            logging.warning(f"{missing_count} missing values found in '{column}', handling with '{fill_method}'.")
+            missing_rows_timestamps = self.df[self.df[column].isna()].index.tolist()
+            logging.warning(
+                f"{missing_count} missing values found in '{column}', handling with '{fill_method}'. "
+                f"Timestamps of missing rows: {missing_rows_timestamps}."
+            )
 
             try:
-                if time_window is None:
+                if time_window is None and fill_method in accepted_methods:
                     self._apply_global_fill(column, fill_method, fill_value)
                 elif time_window is not None and fill_method in ["mean", "median"]:
                     self._apply_time_based_fill(column, fill_method, time_window)
@@ -256,24 +282,39 @@ class DataChecker:
       """
         if fill_method == "ffill":
             self.df[column] = self.df[column].fillna(method="ffill")
+            # check if any NaN remains at the start and apply bfill if needed
+            if self.df[column].isna().iloc[0]:
+                logging.warning(f"Missing value at the start of column '{column}' after forward fill. Applying backward fill for the first value.")
+                self.df[column] = self.df[column].fillna(method="bfill")
+
         elif fill_method == "bfill":
             self.df[column] = self.df[column].fillna(method="bfill")
+            # check if any NaN remains at the end and apply ffill if needed
+            if self.df[column].isna().iloc[-1]:
+                logging.warning(f"Missing value at the end of column '{column}' after backward fill. Applying forward fill for the last value.")
+                self.df[column] = self.df[column].fillna(method="ffill")
+
         elif fill_method == "mean":
             self.df[column] = self.df[column].fillna(self.df[column].mean())
+
         elif fill_method == "median":
             self.df[column] = self.df[column].fillna(self.df[column].median())
+
         elif fill_method == "mode":
             mode_value = self.df[column].mode()
             if not mode_value.empty:
                 self.df[column] = self.df[column].fillna(mode_value[0])
             else:
                 logging.warning(f"Cannot compute mode for column '{column}', skipping.")
+
         elif fill_method == "constant":
             if fill_value is None:
                 log_and_raise_error("No 'fill_value' provided for filling missing values with a constant.")
             self.df[column] = self.df[column].fillna(fill_value)
+
         elif fill_method == "interpolate":
             self.df[column] = self.df[column].interpolate()
+
         else:
             log_and_raise_error(f"Unknown fill_method '{fill_method}' provided.")
 

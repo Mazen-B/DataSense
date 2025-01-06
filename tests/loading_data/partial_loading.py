@@ -2,7 +2,6 @@ import os
 import sys
 import unittest
 import pandas as pd
-from unittest.mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "src")))
 from data_manager.preload_data.filter_by_date_range import PartialDataLoader
