@@ -78,10 +78,11 @@ The logging setup records information both to the console and to rotating log fi
     - [x] add a section in the conf file for the prepresessing options
     - [x] in case of onecoding/categorical cols, add a logic that handle missing values
     - [ ] flag the outlier or remove them (with None option)
-    - [ ] more comprehensive log msgs
+    - [x] more comprehensive log msgs
     - [x] drop is returning an error in the time column even removing duplications
   - **time_processing**:
     - [x] in get_filtered_data, we need to only load the needed columns for a specific time range
 - ### Unit tests 
   - [ ] for conf logic
   - [ ] for data processing logic, especially the values that i am replacing
+  - [ ] add a script that automate the execution of the tests

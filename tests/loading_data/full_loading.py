@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+import tempfile
 import pandas as pd
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "src")))
@@ -13,11 +14,28 @@ class TestFullDataLoader(unittest.TestCase):
 
     def setUp(self):
         self.time_column = "time"
-        self.csv_file_path = os.path.join("input", "dummy_dataset.csv")
-        self.empty_dataset = os.path.join("input", "empty_dataset.csv")
         self.sensors = ["sensor_1", "sensor_2"]
         self.time_format = "%Y-%m-%d %H:%M:%S"
         self.check_duplicates_keep = "first"
+        self.temp_dir = tempfile.TemporaryDirectory()
+
+        # create dummy dataset
+        dummy_data = pd.DataFrame({
+            "time": pd.to_datetime(["2025-01-01 00:00:00", "2025-01-01 12:00:00", "2025-01-02 00:00:00", "2025-01-02 11:00:00", "2025-01-03 00:00:00"]),
+            "sensor_1": [10, 20, 30, 40, 50],
+            "sensor_2": [100, 200, 300, 400, 500]
+        })
+        self.csv_file_path = os.path.join(self.temp_dir.name, "dummy_dataset.csv")
+        dummy_data.to_csv(self.csv_file_path, index=False)
+
+        # create empty dataset
+        self.empty_dataset = os.path.join(self.temp_dir.name, "empty_dataset.csv")
+        empty_data = pd.DataFrame(columns=["time", "sensor_1", "sensor_2"])
+        empty_data.to_csv(self.empty_dataset, index=False)
+
+    def tearDown(self):
+        # cleanup temporary directory and files
+        self.temp_dir.cleanup()
 
     def test_full_load_with_correct_data(self):
         """ 
