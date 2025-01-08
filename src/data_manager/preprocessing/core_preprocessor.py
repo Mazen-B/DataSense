@@ -250,9 +250,12 @@ class DataChecker:
         accepted_methods = ["ffill", "bfill", "mean", "median", "mode", "constant", "interpolate"]
         if fill_method not in accepted_methods:
             log_and_raise_error(f"Invalid fill method '{fill_method}' provided.")
-        
-        if time_window is not None and not isinstance(time_window, str):
-            log_and_raise_error(f"Invalid time_window '{time_window}'. Must be a valid Pandas offset string (e.g., '1min', '5min').")
+
+        if time_window is not None:
+            try:
+                pd.Timedelta(time_window)
+            except ValueError:
+                log_and_raise_error(f"Invalid time_window '{time_window}'. Must be a valid Pandas offset string (e.g., '1min', '5min').")
 
         for column in columns:
             missing_count = self.df[column].isna().sum()
@@ -279,18 +282,18 @@ class DataChecker:
       This helper method fills missing values globally using the specified fill method.
       """
         if fill_method == "ffill":
-            self.df[column] = self.df[column].fillna(method="ffill")
+            self.df[column] = self.df[column].ffill()
             # check if any NaN remains at the start and apply bfill if needed
             if self.df[column].isna().iloc[0]:
                 logging.warning(f"Missing value at the start of column '{column}' after forward fill. Applying backward fill for the first value.")
-                self.df[column] = self.df[column].fillna(method="bfill")
+                self.df[column] = self.df[column].bfill()
 
         elif fill_method == "bfill":
-            self.df[column] = self.df[column].fillna(method="bfill")
+            self.df[column] = self.df[column].bfill()
             # check if any NaN remains at the end and apply ffill if needed
             if self.df[column].isna().iloc[-1]:
                 logging.warning(f"Missing value at the end of column '{column}' after backward fill. Applying forward fill for the last value.")
-                self.df[column] = self.df[column].fillna(method="ffill")
+                self.df[column] = self.df[column].ffill()
 
         elif fill_method == "mean":
             self.df[column] = self.df[column].fillna(self.df[column].mean())
@@ -316,42 +319,71 @@ class DataChecker:
             self.df[column] = self.df[column].interpolate()
             if self.df[column].isna().iloc[0]:  # check for NaN at the start
                 logging.warning(f"Missing value at the start of column '{column}' after interpolation. Applying forward bfill.")
-                self.df[column] = self.df[column].fillna(method="bfill")
+                self.df[column] = self.df[column].bfill()
             if self.df[column].isna().iloc[-1]:  # check for NaN at the end
                 logging.warning(f"Missing value at the end of column '{column}' after interpolation. Applying backward ffill.")
-                self.df[column] = self.df[column].fillna(method="ffill")
+                self.df[column] = self.df[column].ffill()
         else:
             log_and_raise_error(f"Unknown fill_method '{fill_method}' provided.")
-
 
     def _apply_time_based_fill(self, column, fill_method, time_window):
         """
       This helper method fills missing values based on a centered rolling time window.
       """
+        window_offset = pd.Timedelta(time_window) / 2
+
+        def centered_rolling(row):
+            current_time = row.name
+            start_time = max(current_time - window_offset, self.df.index.min())
+            end_time = min(current_time + window_offset, self.df.index.max())
+
+            if not (start_time <= end_time):
+                logging.info(f"At timestamp '{current_time}', no valid window found. Skipping.")
+                return None
+
+            window_data = self.df.loc[start_time:end_time, column]
+            if window_data.empty:
+                logging.info(f"At timestamp '{current_time}', window is empty. Skipping.")
+                return None
+
+            if fill_method == "mean":
+                new_value = round(window_data.mean(), 1)
+                logging.info(f"At timestamp '{current_time}', filled using mean: {new_value} (window: {start_time} to {end_time}).")
+                return new_value
+            elif fill_method == "median":
+                new_value = round(window_data.median(), 1)
+                logging.info(f"At timestamp '{current_time}', filled using median: {new_value} (window: {start_time} to {end_time}).")
+                return new_value
+
         try:
-            # apply rolling operation for mean or median
-            if fill_method in ["mean", "median"]:
-                rolling_result = (self.df[column]
-                    .rolling(window=time_window, center=True, min_periods=1)
-                    .agg(fill_method))
-                # fill missing values with rolling result
-                self.df[column] = self.df[column].fillna(rolling_result)
+            # apply centered rolling only to missing values
+            missing_indices = self.df[self.df[column].isna()].index
+            filled_values = self.df.loc[missing_indices].apply(centered_rolling, axis=1)
+            self.df.loc[missing_indices, column] = filled_values
 
             # handle remaining missing values at the start and end
             if self.df[column].isna().iloc[0]:
-                logging.warning(f"Remaining missing values at the start of column '{column}' after rolling {fill_method}. Applying backward fill.")
-                self.df[column] = self.df[column].fillna(method="bfill")
+                logging.warning(f"Remaining missing values at the start of column '{column}' after centered rolling fill. Applying backward fill.")
+                self.df[column] = self.df[column].bfill()
+                logging.info(f"Backward fill applied at the start of column '{column}'.")
 
             if self.df[column].isna().iloc[-1]:
-                logging.warning(f"Remaining missing values at the end of column '{column}' after rolling {fill_method}. Applying forward fill.")
-                self.df[column] = self.df[column].fillna(method="ffill")
+                logging.warning(f"Remaining missing values at the end of column '{column}' after centered rolling fill. Applying forward fill.")
+                self.df[column] = self.df[column].ffill()
+                logging.info(f"Forward fill applied at the end of column '{column}'.")
 
-            # handle large gaps by filling with the global mean or median if any NaN remains
-            remaining_missing_final = self.df[column].isna().sum()
-            if remaining_missing_final > 0:
+            # global fill for any remaining missing values
+            remaining_missing_global_fill = self.df[column].isna().sum()
+            if remaining_missing_global_fill > 0:
                 global_fill_value = self.df[column].mean() if fill_method == "mean" else self.df[column].median()
-                logging.warning(f"{remaining_missing_final} missing values remain in column '{column}' after rolling {fill_method} and boundary fills. Filling them with the global {fill_method}.")
+                logging.warning(f"{remaining_missing_global_fill} missing values remain in column '{column}' after boundary fills. Applying global {fill_method} fill.")
                 self.df[column] = self.df[column].fillna(global_fill_value)
+                logging.info(f"Global {fill_method} fill applied with value: {global_fill_value}.")
+
+            # final check that returns an error for any remaining missing values
+            remaining_missing = self.df[column].isna().sum()
+            if remaining_missing > 0:
+                log_and_raise_error(f"After filling, {remaining_missing} missing values remain in '{column}'. Try increasing the time_window value.")
 
         except Exception as e:
             logging.error(f"Error in time-based fill for column '{column}': {e}")
