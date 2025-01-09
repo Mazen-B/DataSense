@@ -120,26 +120,31 @@ class DataChecker:
 
             # boolean columns
             if col_dtype == "bool":
-                logging.info(f"Encoding boolean column '{column}' as integers.")
-                self.df[column] = self.df[column].astype(int)
-    
+                logging.info(f"Encoding boolean column '{column}' as integers (0/1).")
+                self.df[column] = self.df[column].astype("int8")
+
             # object or string-based columns
             elif col_dtype == "object" or str(col_dtype).startswith("string"):
                 unique_values = self.df[column].dropna().unique()
-            
+
                 # binary categorical (e.g., ON/OFF, Yes/No)
                 if len(unique_values) == 2:
-                    logging.info(f"Encoding binary categorical column '{column}' as integers.")
-                    self.df[column] = self.df[column].map({unique_values[0]: 0, unique_values[1]: 1})
-           
+                    logging.info(
+                        f"Encoding binary categorical column '{column}' as integers (0/1) with mapping: "
+                        f"{{'{unique_values[0]}': 0, '{unique_values[1]}': 1}}.")
+                    self.df[column] = (self.df[column].map({unique_values[0]: 0, unique_values[1]: 1}).astype("int8"))
+
                 # multi-class categorical
                 else:
                     logging.info(f"Encoding multi-class categorical column '{column}' with unique values: {unique_values}.")
-                    self.df[column] = self.df[column].astype("category").cat.codes
+                    self.df[column] = self.df[column].astype("category").cat.codes.astype("int8")
 
-            # handle any unexpected data types
+                    for idx, value in enumerate(unique_values):
+                        logging.info(f"Encoded value '{value}' as {idx} in column '{column}'.")
+
+            # handle any unexpected non-numeric data types
             elif not pd.api.types.is_numeric_dtype(col_dtype):
-                logging.warning(f"Unexpected non-numeric column '{column}' detected with dtype '{col_dtype}'.")
+                logging.warning(f"Unexpected non-numeric column '{column}' detected with dtype '{col_dtype}'. No encoding applied.")
 
         return self.df
 
@@ -147,7 +152,7 @@ class DataChecker:
         """
       This method validates that the columns have expected data types.
       """
-        valid_dtypes = ["int64", "float64"]
+        valid_dtypes = ["int8", "int16", "int32", "int64", "float32", "float64"]
 
         # identify non-numeric columns, excluding the time column
         non_numeric_cols = [
@@ -158,8 +163,9 @@ class DataChecker:
             log_and_raise_error(f"Non-numeric columns detected (excluding time column): {non_numeric_cols}")
 
         # identify numeric columns that are not of the expected types
-        invalid_numeric_cols = [col for col in self.df.columns 
-                                if col != self.time_column and str(self.df[col].dtype) not in valid_dtypes]
+        invalid_numeric_cols = [
+            col for col in self.df.columns
+            if col != self.time_column and str(self.df[col].dtype) not in valid_dtypes]
         
         if invalid_numeric_cols:
             log_and_raise_error(f"Numeric columns with unexpected types detected (not in {valid_dtypes}): {invalid_numeric_cols}")
