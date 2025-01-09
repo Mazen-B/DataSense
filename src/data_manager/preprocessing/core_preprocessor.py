@@ -214,12 +214,11 @@ class DataChecker:
         total_empty = empty_values.sum()
         
         if total_empty > 0:
-            empty_rows_timestamps = self.df[self.df.isna().any(axis=1)].index.tolist()
-            empty_columns = empty_values[empty_values > 0].index.tolist()
-            
-            log_and_raise_error(
-                f"Data validation failed: {total_empty} empty values remain in columns {empty_columns} "
-                f"at the following timestamps: {empty_rows_timestamps}.")
+            empty_details = {
+                col: self.df.loc[self.df[col].isna(), self.time_column].tolist()
+                for col in empty_values[empty_values > 0].index}
+
+            log_and_raise_error(f"Data validation failed: {total_empty} empty values remain. Details: {empty_details}")
 
     # --- Helper Methods ---
     def _validate_time_column(self):
