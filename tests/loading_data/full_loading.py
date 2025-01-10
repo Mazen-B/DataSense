@@ -5,7 +5,7 @@ import tempfile
 import pandas as pd
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "src")))
-from data_manager.preload_data.get_full_data import FullDataLoader
+from data_manager.prepare_data.get_full_data import FullDataLoader
 from data_manager.loaders.csv_file_reader import CSVFileReader
 from data_manager.loaders.excel_file_reader import ExcelFileReader
 from data_manager.loaders.data_loader import load_data

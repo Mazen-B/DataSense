@@ -5,7 +5,7 @@ import tempfile
 import pandas as pd
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "src")))
-from data_manager.preload_data.filter_by_date_range import PartialDataLoader
+from data_manager.prepare_data.filter_by_date_range import PartialDataLoader
 
 class TestPartialDataLoaderWithFile(unittest.TestCase):
 
@@ -13,7 +13,7 @@ class TestPartialDataLoaderWithFile(unittest.TestCase):
         self.time_column = "time"
         self.sensors = ["sensor_1", "sensor_2"]
         self.time_format="%Y-%m-%d %H:%M:%S"
-        self.time_processing_par=["drop", "error"]
+        self.time_processing_par = ["first", "drop", "error"]
         self.temp_dir = tempfile.TemporaryDirectory()
 
         # create dummy dataset

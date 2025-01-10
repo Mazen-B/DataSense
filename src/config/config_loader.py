@@ -55,9 +55,10 @@ def get_yaml_input(config, single_date=False, time_range=False):
     detect_outliers_threshold = pre_processing.get("detect_outliers", {}).get("threshold")
     check_duplicates_keep = pre_processing["time_col"]["check_duplicates_keep"]
     time_col_missing_values = pre_processing["time_col"]["handle_missing_values"]
+    time_col_datetime_conversion = pre_processing["time_col"]["failed_datetime_conversion"]
     core_processing_par = [missing_values_strategy, missing_values_fill_method, missing_values_fill_value,
         missing_values_time_window, detect_outliers_method, detect_outliers_threshold]
-    time_processing_par = [check_duplicates_keep, time_col_missing_values]
+    time_processing_par = [check_duplicates_keep, time_col_missing_values, time_col_datetime_conversion]
 
     # create the output dir if it does not exist
     create_output_dir(output_dir)

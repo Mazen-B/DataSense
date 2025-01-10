@@ -161,14 +161,13 @@ def validate_time_col(time_col_config):
     """
   This function validates the time_col section in the config
   """
-    # check "check_duplicates_keep"
-    valid_keep_options = ["first", "last", None]
-    keep_option = time_col_config.get("check_duplicates_keep")
-    if keep_option not in valid_keep_options:
-        log_and_raise_error(f"Invalid 'check_duplicates_keep': must be one of {valid_keep_options}.")
-
-    # check "handle_missing_values"
-    valid_handle_missing = ["error", "drop"]
-    handle_missing = time_col_config.get("handle_missing_values")
-    if handle_missing not in valid_handle_missing:
-        log_and_raise_error(f"Invalid 'handle_missing_values': must be one of {valid_handle_missing}.")
+    validation_rules = {
+        "check_duplicates_keep": ["first", "last", None],
+        "handle_missing_values": ["error", "drop"],
+        "failed_datetime_conversion": ["error", "drop"]
+    }
+    
+    for key, valid_options in validation_rules.items():
+        value = time_col_config.get(key)
+        if value not in valid_options:
+            log_and_raise_error(f"Invalid '{key}': must be one of {valid_options}.")

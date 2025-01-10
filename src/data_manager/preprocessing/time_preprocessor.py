@@ -14,13 +14,14 @@ class TimePreprocessor:
       """
         keep = time_processing_par[0]
         handle_missing = time_processing_par[1]
+        action = time_processing_par[2]
         
         logging.info(f"Starting the initial filtering and processing of the '{self.time_column}' column.")
 
         self.validate_time_column()
         self.handle_missing_values(handle_missing)
         self.convert_to_datetime()
-        self.handle_failed_datetime_conversion()
+        self.handle_failed_datetime_conversion(action)
         self.order_time_column()
         self.check_duplicates(keep)
 
@@ -70,7 +71,7 @@ class TimePreprocessor:
         except Exception as e:
             log_and_raise_exception(f"Error converting '{self.time_column}' to datetime: {e}")
 
-    def handle_failed_datetime_conversion(self):
+    def handle_failed_datetime_conversion(self, action):
         """
       This method handles rows where datetime conversion failed (set to NaT). Logs details and drops or raises an error.
       """
@@ -79,7 +80,14 @@ class TimePreprocessor:
             failed_rows = self.df[self.df[self.time_column].isna()]
             logging.warning(f"{failed_count} rows failed datetime conversion and have been set to NaT.")
             logging.debug(f"Rows with failed datetime conversion: {failed_rows}")
-            log_and_raise_error(f"Failed to convert {failed_count} rows to datetime. Inspect or clean these rows.")
+            
+            if action == "drop":
+                self.df = self.df.dropna(subset=[self.time_column])
+                logging.info(f"Dropped {failed_count} rows with failed datetime conversion.")
+            elif action == "error":
+                log_and_raise_error(f"Failed to convert {failed_count} rows to datetime. Inspect or clean these rows.")
+            else:
+                raise ValueError("Invalid action specified. Use 'error' or 'drop'.")
 
     def order_time_column(self):
         """

@@ -44,9 +44,10 @@ class TestDateTimeConversion(unittest.TestCase):
 
     @patch("data_manager.preprocessing.time_preprocessor.logging.warning")
     @patch("data_manager.preprocessing.time_preprocessor.log_and_raise_error")
-    def test_handle_failed_datetime_conversion(self, mock_log_error, mock_log_warning):
+    def test_handle_failed_datetime_conversion_raise(self, mock_log_error, mock_log_warning):
         """ 
       This test checks that handle_failed_datetime_conversion raises an error and logs a warning when rows with NaT are present after conversion 
+      and action is set to "error".
       """
         df = pd.DataFrame({"time": ["2025-01-01", "invalid_date_1", "2025-01-03", "invalid_date_2"]})
         preprocessor = TimePreprocessor(df, "time", "%Y-%m-%d")
@@ -57,10 +58,9 @@ class TestDateTimeConversion(unittest.TestCase):
         # ensure the second row was converted to NaT
         self.assertTrue(preprocessor.df["time"].isna().any())
 
-        # test the handling of failed conversion
         mock_log_error.side_effect = ValueError("Failed to convert 2 rows to datetime. Inspect or clean these rows.")
         with self.assertRaises(ValueError) as context:
-            preprocessor.handle_failed_datetime_conversion()
+            preprocessor.handle_failed_datetime_conversion(action="error")
 
         # ensure the correct error message was raised
         self.assertEqual(
@@ -70,10 +70,33 @@ class TestDateTimeConversion(unittest.TestCase):
         # ensure a warning was logged about failed conversion
         mock_log_warning.assert_called_once_with("2 rows failed datetime conversion and have been set to NaT.")
 
+    @patch("data_manager.preprocessing.time_preprocessor.logging.info")
+    @patch("data_manager.preprocessing.time_preprocessor.logging.warning")
+    def test_handle_failed_datetime_conversion_drop(self, mock_log_warning, mock_log_info):
+        """ 
+      This test checks that handle_failed_datetime_conversion drops rows with NaT when action is set to "drop".
+      """
+        df = pd.DataFrame({"time": ["2025-01-01", "invalid_date_1", "2025-01-03", "invalid_date_2"]})
+        preprocessor = TimePreprocessor(df, "time", "%Y-%m-%d")
+
+        # get NaT by converting with errors="coerce"
+        preprocessor.convert_to_datetime()
+
+        # ensure the second row was converted to NaT
+        self.assertTrue(preprocessor.df["time"].isna().any())
+
+        preprocessor.handle_failed_datetime_conversion(action="drop")
+
+        # ensure no NaT values are present after dropping
+        self.assertFalse(preprocessor.df["time"].isna().any())
+
+        mock_log_info.assert_called_once_with("Dropped 2 rows with failed datetime conversion.")
+        mock_log_warning.assert_called_once_with("2 rows failed datetime conversion and have been set to NaT.")
+
     def test_no_failed_datetime_conversion(self):
         """ 
-      This test checks that handle_failed_datetime_conversion does nothing when there are no failed conversions 
-      """
+        This test checks that handle_failed_datetime_conversion does nothing when there are no failed conversions 
+        """
         df = pd.DataFrame({"time": ["2025-01-01", "2025-01-02", "2025-01-03"]})
         preprocessor = TimePreprocessor(df, "time", "%Y-%m-%d")
         preprocessor.convert_to_datetime()
@@ -82,7 +105,8 @@ class TestDateTimeConversion(unittest.TestCase):
         self.assertFalse(preprocessor.df["time"].isna().any())
 
         # this should not raise an error since there are no NaT values
-        preprocessor.handle_failed_datetime_conversion()
+        preprocessor.handle_failed_datetime_conversion(action="raise")
+        preprocessor.handle_failed_datetime_conversion(action="drop")
 
 if __name__ == "__main__":
     unittest.main()
