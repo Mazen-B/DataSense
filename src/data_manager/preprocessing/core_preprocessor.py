@@ -24,7 +24,7 @@ class DataChecker:
         self.detect_outliers(outliers_method, threshold)
         self.last_emptness_check()
 
-        logging.info("Data cleaning and validation process completed. The dataset is now ready for further analysis.")
+        logging.info("Main data cleaning and validation process completed.")
         return self.df
 
     def standardize_column_names(self):

@@ -1,7 +1,7 @@
 import os
 import sys
 import logging
-from core.statistics import generate_stats
+from core.rule_mining import rule_mining
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from config.config_loader import get_yaml_input
@@ -20,7 +20,7 @@ def run_analysis(config, mode):
         # full_data
         logging.info("Starting analysis for full data.")
 
-    generate_stats(input_file, output_dir, time_column, time_format, sensors, date_range, core_processing_par, time_processing_par)
+    rule_mining(input_file, output_dir, time_column, time_format, sensors, date_range, core_processing_par, time_processing_par)
 
 def prepare_inputs(config, mode):
     """

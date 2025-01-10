@@ -1,6 +1,6 @@
 from data_manager.data_processing import DataProcessor
 
-def generate_stats(input_file, output_dir, time_column, time_format, sensors, date_range, core_processing_par, time_processing_par):
+def rule_mining(input_file, output_dir, time_column, time_format, sensors, date_range, core_processing_par, time_processing_par):
     """
   This function handles the common steps required for a single day, specified time range, or full data options. 
   It processes the data, prepares the data, and then generates the stats.  

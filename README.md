@@ -84,5 +84,7 @@ The logging setup records information both to the console and to rotating log fi
     - [x] in get_filtered_data, we need to only load the needed columns for a specific time range
 - ### Unit tests 
   - [ ] for conf logic
-  - [ ] for data processing logic, especially the values that i am replacing
-  - [ ] add a script that automate the execution of the tests
+  - [x] for data processing logic, especially the values that i am replacing
+  - [x] add a script that automate the execution of the tests
+
+Example: Rule: If sensor1 > threshold and sensor10 < threshold → error_signal = True
