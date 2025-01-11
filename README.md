@@ -9,22 +9,41 @@
 All necessary input parameters are defined in the `config.yaml` file. Modify this configuration file to set the log file location, processing options, mode of operation, and sensor selection. Below is an example of the `config.yaml` file and details on each section:
 
 ```yaml
-input_file: "../input_files/missing_values.csv"
+input_file: "../input_files/dummy_data.csv"
 output_dir: "../output/stats/"
-date: "2024-06-01" # must have this format YYYY-MM-DD
-mode: "single_day" # Options: "single_day" "multi_days", "full_data"
 time_column: "time"
-time_format: "%Y-%m-%d %H:%M:%S"  # Choose from: "%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S", "%m-%d-%Y %H:%M:%S"
+time_format: "%Y-%m-%d %H:%M:%S"
 sensors:
   temperature:
+    - "te201"
+    - "te202"
+    - "te302"
     - "te306"
     - "te307"
+    - "te401"
+    - "te501"
+    - "te601"
   pressure:
+    - "pe201"
     - "pe303"
     - "pe301"
   el_power:
-    - "pelgross"
+    - "pelgrossep"
+    - "pelconsumep"
+  rpm:
+    - "sgen"
+    - "sfp"
+    - "scond"
+  ordinal:
+    - "orcmode"
+    - "errno"
+  categorical:
+    - "genok"
 pre_processing:
+  time_col:
+    check_duplicates_keep: "first"
+    handle_missing_values: "drop"
+    failed_datetime_conversion: "error"
   handle_missing_values:
     strategy: "fill"
     fill_method: "mean"
@@ -33,8 +52,18 @@ pre_processing:
   detect_outliers:
     method: "z_score"
     threshold: 3
-  check_duplicates:
-    keep: "first"
+  rule_mining:
+    method: "equal_width"
+    bins: 3
+    labels: null
+    continuous_sensor_types:
+      - "temperature"
+      - "pressure"
+      - "el_power"
+      - "rpm"
+    ordinal_sensor_types:
+      - "orcmode"
+      - "errno"
 ```
 
 ### Configuration Details

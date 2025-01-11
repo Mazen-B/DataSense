@@ -1,8 +1,7 @@
 import os
-from data_manager.preprocessing.rule_mining_processor import RuleMiningProcessor
-from data_manager.prepare_data.filter_by_date_range import PartialDataLoader
-from data_manager.preprocessing.core_preprocessor import DataChecker
 from data_manager.prepare_data.get_full_data import FullDataLoader
+from data_manager.preprocessing.core_preprocessor import DataChecker
+from data_manager.prepare_data.filter_by_date_range import PartialDataLoader
 
 class DataProcessor:
     def __init__(self, input_file, output_dir, time_column, time_format, sensors, core_processing_par, time_processing_par):
@@ -68,16 +67,10 @@ class DataProcessor:
         processed_data_file = os.path.join(self.output_dir, "processed_full_data.csv")
         processed_data.to_csv(processed_data_file, index=False)
 
-        # step3: preprocess for the rule mining tool
-        discretize_data = RuleMiningProcessor(processed_data, self.sensors_dict)
-        discretize_data = discretize_data.advanced_preprocessing(method="equal_width", bins=3, labels=["low", "medium", "high"])
-        mining_rules_file = os.path.join(self.output_dir, "mining_rules.csv")
-        discretize_data.to_csv(mining_rules_file, index=False)
-
-        # step 4: prepare the components needed for further analysis
-        time = discretize_data[self.time_column]
+        # step 3: prepare the components needed for further analysis
+        time = processed_data[self.time_column]
         organized_sensors = {}
         for division, division_sensors in self.sensors_dict.items():
-            organized_sensors[division] = [discretize_data[col] for col in division_sensors if col in discretize_data.columns]
+            organized_sensors[division] = [processed_data[col] for col in division_sensors if col in processed_data.columns]
         
-        return time, organized_sensors
+        return time, organized_sensors, processed_data

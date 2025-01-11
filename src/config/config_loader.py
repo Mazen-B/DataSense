@@ -60,18 +60,30 @@ def get_yaml_input(config, single_date=False, time_range=False):
         missing_values_time_window, detect_outliers_method, detect_outliers_threshold]
     time_processing_par = [check_duplicates_keep, time_col_missing_values, time_col_datetime_conversion]
 
+    # get rule mining parameters if present
+    rule_mining_config = pre_processing.get("rule_mining", None)
+    if rule_mining_config:
+        rule_mining_method = rule_mining_config.get("method")
+        rule_mining_bins = rule_mining_config.get("bins")
+        rule_mining_labels = rule_mining_config.get("labels")
+        continuous_sensor_types = rule_mining_config.get("continuous_sensor_types", [])
+        ordinal_sensor_types = rule_mining_config.get("ordinal_sensor_types", [])
+        rule_mining_processing_par = [rule_mining_method, rule_mining_bins, rule_mining_labels, continuous_sensor_types]
+    else:
+        rule_mining_processing_par = None
+
     # create the output dir if it does not exist
     create_output_dir(output_dir)
 
     if single_date:
         # for "single_day" mode
         date = config["date"]
-        return input_file, output_dir, time_column, time_format, sensors, date, core_processing_par, time_processing_par
+        return input_file, output_dir, time_column, time_format, sensors, date, core_processing_par, time_processing_par, rule_mining_processing_par
     elif time_range:
         # for "time_range" mode 
         start_date = config["start_date"]
         end_date = config["end_date"]
-        return input_file, output_dir, time_column, time_format, sensors, start_date, end_date, core_processing_par, time_processing_par
+        return input_file, output_dir, time_column, time_format, sensors, start_date, end_date, core_processing_par, time_processing_par, rule_mining_processing_par
     else:
         # for "full_data" mode 
-        return input_file, output_dir, time_column, time_format, sensors, core_processing_par, time_processing_par
+        return input_file, output_dir, time_column, time_format, sensors, core_processing_par, time_processing_par, rule_mining_processing_par

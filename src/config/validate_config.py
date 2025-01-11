@@ -122,6 +122,10 @@ def validate_pre_processing(pre_processing):
     time_col_config = pre_processing.get("time_col", {})
     validate_time_col(time_col_config)
 
+    rule_mining_config = pre_processing.get("rule_mining", None)
+    if rule_mining_config:
+        validate_rule_mining(rule_mining_config)
+
 def validate_handle_missing_values(hmv_config):
     """
   This function validates the handle_missing_values section.
@@ -171,3 +175,32 @@ def validate_time_col(time_col_config):
         value = time_col_config.get(key)
         if value not in valid_options:
             log_and_raise_error(f"Invalid '{key}': must be one of {valid_options}.")
+
+def validate_rule_mining(rule_mining_config):
+    """
+  This function validates the rule_mining section of the configuration.
+  """
+    valid_methods = ["equal_width", "quantile"]
+
+    method = rule_mining_config.get("method")
+    if not method or method not in valid_methods:
+        log_and_raise_error(f"Invalid 'method': must be one of {valid_methods}.")
+
+    bins = rule_mining_config.get("bins")
+    if not isinstance(bins, int) or bins <= 0:
+        log_and_raise_error("Invalid 'bins': must be a positive integer.")
+
+    labels = rule_mining_config.get("labels")
+    if labels is not None and not isinstance(labels, list) and not isinstance(labels, str):
+        log_and_raise_error("Invalid 'labels': must be None, a list of strings, or a single string.")
+
+    continuous_sensor_types = rule_mining_config.get("continuous_sensor_types", None)
+
+    if continuous_sensor_types is None:
+        log_and_raise_error("At least one sensor in 'continuous_sensor_types' must be provided.")
+
+    if continuous_sensor_types is not None:
+        if not isinstance(continuous_sensor_types, list) or not continuous_sensor_types:
+            log_and_raise_error("'continuous_sensor_types' must be a non-empty list of strings.")
+        if not all(isinstance(s, str) for s in continuous_sensor_types):
+            log_and_raise_error("'continuous_sensor_types' must contain only strings.")
