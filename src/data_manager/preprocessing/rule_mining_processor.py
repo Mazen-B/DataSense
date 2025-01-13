@@ -106,7 +106,7 @@ class RuleMiningProcessor:
         if non_binary_columns:
             log_and_raise_error(f"Data validation failed: The following columns contain non-binary values: {non_binary_columns}")
         
-        logging.info("Empty value check passed, and all columns are confirmed to be binary (0/1).")
+        logging.info("Empty value check passed, and all columns are confirmed to be binary.")
 
     # --- Helper Methods ---
     def _get_sensors_by_type(self, types):

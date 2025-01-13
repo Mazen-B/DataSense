@@ -204,3 +204,13 @@ def validate_rule_mining(rule_mining_config):
             log_and_raise_error("'continuous_sensor_types' must be a non-empty list of strings.")
         if not all(isinstance(s, str) for s in continuous_sensor_types):
             log_and_raise_error("'continuous_sensor_types' must contain only strings.")
+
+    min_support = rule_mining_config.get("min_support")
+    min_confidence = rule_mining_config.get("min_confidence")
+    min_lift = rule_mining_config.get("min_lift")
+    if min_support is not None and (not isinstance(min_support, float) or min_support <= 0):
+        log_and_raise_error("Invalid 'min_support': must be a positive float or None.")
+    if min_confidence is not None and (not isinstance(min_confidence, float) or min_confidence <= 0):
+        log_and_raise_error("Invalid 'min_confidence': must be a positive float or None.")
+    if min_lift is not None and (not isinstance(min_lift, float) or min_lift < 0):
+        log_and_raise_error("Invalid 'min_lift': must be a non-negative float or None.")

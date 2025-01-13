@@ -107,6 +107,7 @@ The logging setup records information both to the console and to rotating log fi
     - [x] add a section in the conf file for the prepresessing options
     - [x] in case of onecoding/categorical cols, add a logic that handle missing values
     - [ ] flag the outlier or remove them (with None option)
+    - [ ] outliers detection not for the ordinal cols
     - [x] more comprehensive log msgs
     - [x] drop is returning an error in the time column even removing duplications
   - **time_processing**:
@@ -115,5 +116,9 @@ The logging setup records information both to the console and to rotating log fi
   - [ ] for conf logic
   - [x] for data processing logic, especially the values that i am replacing
   - [x] add a script that automate the execution of the tests
+  - [ ] for rule mining logic (preprocessing + logic)
+- ### AMR:
+  - [ ] add the logic 
+  - [ ] quantile logiv not working
 
 Example: Rule: If sensor1 > threshold and sensor10 < threshold → error_signal = True

@@ -67,8 +67,10 @@ def get_yaml_input(config, single_date=False, time_range=False):
         rule_mining_bins = rule_mining_config.get("bins")
         rule_mining_labels = rule_mining_config.get("labels")
         continuous_sensor_types = rule_mining_config.get("continuous_sensor_types", [])
-        ordinal_sensor_types = rule_mining_config.get("ordinal_sensor_types", [])
-        rule_mining_processing_par = [rule_mining_method, rule_mining_bins, rule_mining_labels, continuous_sensor_types]
+        min_support = rule_mining_config.get("min_support")
+        min_confidence = rule_mining_config.get("min_confidence")
+        min_lift = rule_mining_config.get("min_lift")
+        rule_mining_processing_par = [rule_mining_method, rule_mining_bins, rule_mining_labels, continuous_sensor_types, min_support, min_confidence, min_lift]
     else:
         rule_mining_processing_par = None
 

@@ -39,7 +39,7 @@ class DataProcessor:
         processed_data = data_checker.full_validation(self.core_processing_par)
         
         # save the processed data
-        processed_data_file = os.path.join(self.output_dir, "processed_data.csv")
+        processed_data_file = os.path.join(self.output_dir, "processed_time_range_data.csv")
         processed_data.to_csv(processed_data_file, index=False)
 
         # step 3: prepare the components needed for EDA
@@ -48,7 +48,7 @@ class DataProcessor:
         for division, division_sensors in self.sensors_dict.items():
             organized_sensors[division] = [processed_data[col] for col in division_sensors if col in processed_data.columns]
         
-        return time, organized_sensors
+        return time, organized_sensors, processed_data
 
     def process_full_data(self):
         """
