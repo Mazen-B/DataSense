@@ -16,6 +16,8 @@ class CSVFileReader(BaseFileReader):
                 logging.info(f"Successfully read the CSV with specified column(s): {columns}, for the extracted time range.")
 
             return data
+        
+        # TODO: add dask
 
         except Exception as e:
             log_and_raise_error(f"Failed to read CSV file {self.file_path}: {e}")

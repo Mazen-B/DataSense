@@ -16,8 +16,8 @@ class DataChecker:
         
         strategy, fill_method, fill_value, time_window, outliers_method, threshold = core_processing_par
 
-        self.standardize_column_names()
         self.validate_columns()
+        self.standardize_column_names()
         self.handle_missing_values(strategy, fill_method, fill_value, time_window)
         self.encode_categorical_and_booleans()
         self.validate_data_types()
@@ -25,27 +25,6 @@ class DataChecker:
         self.last_emptness_check()
 
         logging.info("Main data cleaning and validation process completed.")
-        return self.df
-
-    def standardize_column_names(self):
-        """
-      This method standardizes column names by making them lowercase, tripping leading/trailing spaces, 
-      and replacing spaces with underscores.
-      """
-        try:
-            if not isinstance(self.df, pd.DataFrame):
-                log_and_raise_error("Data format error: 'self.df' is not a DataFrame.")
-            
-            self.df.columns = (
-                self.df.columns.str.strip()  # remove leading/trailing spaces
-                               .str.lower()  # convert to lowercase
-                               .str.replace(" ", "_", regex=False)  # replace spaces with underscores
-            )
-        except AttributeError as e:
-            log_and_raise_error(f"Attribute error in 'standardize_column_names': {str(e)}")
-        except Exception as e:
-            log_and_raise_exception(f"Unexpected error in 'standardize_column_names': {str(e)}")
-        
         return self.df
 
     def validate_columns(self):
@@ -66,6 +45,27 @@ class DataChecker:
         if empty_columns:
             log_and_raise_error(f"The following columns are completely empty: {empty_columns}")
 
+        return self.df
+    
+    def standardize_column_names(self):
+        """
+      This method standardizes column names by making them lowercase, tripping leading/trailing spaces, 
+      and replacing spaces with underscores.
+      """
+        try:
+            if not isinstance(self.df, pd.DataFrame):
+                log_and_raise_error("Data format error: 'self.df' is not a DataFrame.")
+            
+            self.df.columns = (
+                self.df.columns.str.strip()  # remove leading/trailing spaces
+                               .str.lower()  # convert to lowercase
+                               .str.replace(" ", "_", regex=False)  # replace spaces with underscores
+            )
+        except AttributeError as e:
+            log_and_raise_error(f"Attribute error in 'standardize_column_names': {str(e)}")
+        except Exception as e:
+            log_and_raise_exception(f"Unexpected error in 'standardize_column_names': {str(e)}")
+        
         return self.df
 
     def handle_missing_values(self, strategy, fill_method, fill_value=None, time_window=None):
