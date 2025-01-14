@@ -44,7 +44,12 @@ class RuleMiningProcessor:
                         self.df[col], bins=bins, labels=labels, retbins=True)
                 elif method == "quantile":
                     df_discretized[col], bin_edges = pd.qcut(
-                        self.df[col], q=bins, labels=labels, retbins=True, duplicates="drop")
+                        self.df[col], q=bins, retbins=True, duplicates="drop")
+                    num_bins = len(bin_edges) - 1
+                    if len(labels) != num_bins:
+                        labels = [f"bin_{i}" for i in range(num_bins)]
+                    df_discretized[col] = pd.qcut(
+                        self.df[col], q=num_bins, labels=labels, retbins=False, duplicates="drop")
                 else:
                     log_and_raise_error("Invalid method. Choose 'equal_width' or 'quantile'.")
 

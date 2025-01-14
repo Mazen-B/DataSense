@@ -6,7 +6,7 @@
 - [Configuration Details](#configuration-details)
 - [Logging](#logging)
 - [Pipeline Description](#pipeline-description)
-- [Dependencies](#dependencies)
+- [Run the Tool](#run-the-tool)
 
 ## Overview
 DataSense is a data analysis tool designed for **association rule mining** on **time-series sensor data**. It preprocesses raw sensor readings, handles missing values, detects outliers, discretizes continuous variables, and applies rule mining techniques using algorithms like **FP-Growth**. The tool supports both CSV and Excel input formats and provides flexible configuration for handling various types of sensors and preprocessing steps.
@@ -85,7 +85,7 @@ pre_processing:
     - **continuous_sensor_types**: Non-empty list of strings.
     - Optional thresholds: `min_support`, `min_confidence`, `min_lift` (positive floats).
 
-### Dependencies
+### Run the Tool
 Ensure the following modules are installed before running the tool:
 
 - **Required Python Libraries**:
@@ -100,6 +100,12 @@ To install the required dependencies, run:
 
 ```bash
 pip install pyyaml pandas mlxtend
+```
+
+To run the tool, navigate to the src directory and execute the following command:
+```bash
+cd src
+python main.py
 ```
 
 ## Logging

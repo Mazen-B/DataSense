@@ -42,7 +42,7 @@ class DataProcessor:
         processed_data_file = os.path.join(self.output_dir, "processed_time_range_data.csv")
         processed_data.to_csv(processed_data_file, index=False)
 
-        # step 3: prepare the components needed for EDA
+        # step 3: prepare the components needed for EDA (TODO: implement EDA logic)
         time = processed_data[self.time_column]
         organized_sensors = {}
         for division, division_sensors in self.sensors_dict.items():
