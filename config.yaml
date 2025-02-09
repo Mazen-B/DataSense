@@ -1,0 +1,35 @@
+input_file: "../input_files/dummy_data.csv"
+output_dir: "../output/"
+time_column: "time"
+time_format: "%Y-%m-%d %H:%M:%S"
+sensors:
+  temperature:
+    - "sensor1"
+    - "sensor2"
+  pressure:
+    - "sensor3"
+pre_processing:
+  time_col:
+    check_duplicates_keep: "first"
+    handle_missing_values: "drop"
+    failed_datetime_conversion: "error"
+  handle_missing_values:
+    strategy: "fill"
+    fill_method: "mean"
+    fill_value: null
+    time_window: "1min"
+  detect_outliers:
+    method: "z_score"
+    threshold: 3
+  rule_mining:
+    method: "equal_width"
+    bins: 3
+    labels: null
+    continuous_sensor_types:
+      - "temperature"
+      - "pressure"
+      - "el_power"
+      - "rpm"
+    min_support: 0.1
+    min_confidence: 0.7
+    min_lift: 1.0

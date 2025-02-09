@@ -2,16 +2,16 @@
 # DataSense
 ## Table of Contents
 - [Overview](#overview)
-- [Usage](#usage)
-- [Configuration Details](#configuration-details)
+- [Configuration Setup and Usage](#configuration-setup-and-usage)
 - [Logging](#logging)
-- [Pipeline Description](#pipeline-description)
+- [Workflow Overview](#workflow-overview)
 - [Run the Tool](#run-the-tool)
+- [License](#license)
 
 ## Overview
-DataSense is a data analysis tool designed for **association rule mining** on **time-series sensor data**. It preprocesses raw sensor readings, handles missing values, detects outliers, discretizes continuous variables, and applies rule mining techniques using algorithms like **FP-Growth**. The tool supports both CSV and Excel input formats and provides flexible configuration for handling various types of sensors and preprocessing steps.
+DataSense is a project focused on **data processing and cleaning**, ensuring the dataset is ready for further analysis. It allows users to process CSV or Excel files by loading the **full dataset** or a specific **time range/single day** (for efficiency). The processed data can then be used for **Exploratory Data Analysis (EDA)**, **Machine Learning (ML)**, or **Rule Mining**. In this case, **Rule Mining** is implemented, with an additional preprocessing script to handle the required transformations.
 
-## Usage
+## Configuration Setup and Usage
 All necessary input parameters are defined in the `config.yaml` file. Modify this configuration file to set the log file location, processing options, mode of operation, and sensor selection. Below is an example of the `config.yaml` file and details on each section:
 
 ```yaml
@@ -19,6 +19,9 @@ input_file: "../input_files/dummy_data.csv"
 output_dir: "../output/"
 time_column: "time"
 time_format: "%Y-%m-%d %H:%M:%S"
+# Specify date (e.g., "2024-06-01") for a single-day analysis
+# Use start_date and end_date for a time range
+# If no date is specified, the full dataset will be loaded
 sensors:
   temperature:
     - "sensor1"
@@ -85,28 +88,15 @@ pre_processing:
     - **continuous_sensor_types**: Non-empty list of strings.
     - Optional thresholds: `min_support`, `min_confidence`, `min_lift` (positive floats).
 
-### Run the Tool
-Ensure the following modules are installed before running the tool:
+##  Output Files
 
-- **Required Python Libraries**:
-  - `pyyaml`: For loading and parsing configuration files.
-  - `pandas`: For data manipulation and analysis.
-  - `mlxtend`: For implementing FP-Growth and generating association rules.
-  - `unittest`: For unit testing.
-  - `pathlib`: For working with file paths.
-  - `logging`: For logging events during execution.
+After running the tool, the following output files are generated and stored in the directory specified in the output_dir parameter of the config file:
 
-To install the required dependencies, run:
+1. **processed_data.csv** - The cleaned dataset, filtered based on the specified columns and time range (if provided in the config file).
 
-```bash
-pip install pyyaml pandas mlxtend
-```
+2. **processed_data_mining_rules.csv** - A further processed dataset, prepared specifically for rule mining.
 
-To run the tool, navigate to the src directory and execute the following command:
-```bash
-cd src
-python main.py
-```
+3. **generated_rules.txt** - A text file containing all generated rules from the rule mining process.
 
 ## Logging
 This project includes a comprehensive logging system, configured to maintain a structured log history.
@@ -115,12 +105,11 @@ This project includes a comprehensive logging system, configured to maintain a s
 
 The logging setup records information both to the console and to rotating log files, ensuring logs remain manageable over time. Logs are organized into separate directories named with the date and time of each session. 
 
-- **Log Directory**: Logs are stored in a subdirectory under `logs` with the session timestamp. For each new session, a unique folder is created, containing a `run.log` file.
+- **Log Directory**: Logs are stored in a subdirectory under `system_logs` with the session timestamp. For each new session, a unique folder is created, containing a `run.log` file.
 - **Log Rotation**: Each log file is limited to 5MB by default, with up to 5 backups maintained to prevent excessive log accumulation.
 - **Error Handling**: Errors are logged and can be raised as exceptions for debugging.
 
-## Pipeline Description
-
+## Workflow Overview
 The DataSense tool operates in several key stages:
 
 ### 1. Configuration Loading and Validation
@@ -169,3 +158,30 @@ The `rule_mining_processor.py` module performs advanced preprocessing for rule m
 - `last_emptness_check()`: Ensures that all columns are not empty and raises an error if non-binary values are found.
 
 ### 6. Association Rule Mining (running FP-Growth algorithm)
+- Extracts rules using FP-Growth based on minimum support, confidence, and lift criteria.
+
+## Run the Tool
+Ensure the following modules are installed before running the tool:
+
+- **Required Python Libraries**:
+  - `pyyaml`: For loading and parsing configuration files.
+  - `pandas`: For data manipulation and analysis.
+  - `mlxtend`: For implementing FP-Growth and generating association rules.
+  - `unittest`: For unit testing.
+  - `pathlib`: For working with file paths.
+  - `logging`: For logging events during execution.
+
+To install the required dependencies, run:
+
+```bash
+pip install pyyaml pandas mlxtend
+```
+
+To run the tool, navigate to the src directory and execute the following command:
+```bash
+cd src
+python main.py
+```
+
+## License
+This project is licensed under the MIT License, allowing free use and modification.

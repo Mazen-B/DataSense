@@ -24,7 +24,23 @@ class DataProcessor:
             sensors_combined.extend(sensors_division)
         
         return sensors_combined
-            
+
+    def _organize_sensors(self, processed_data):
+        """
+      This method organizes sensors data by division
+      """
+        organized_sensors = {}
+        for division, division_sensors in self.sensors_dict.items():
+            organized_sensors[division] = [processed_data[col] for col in division_sensors if col in processed_data.columns]
+        return organized_sensors
+
+    def _save_processed_data(self, processed_data):
+        """
+      This method saves the processed data
+      """
+        processed_data_file = os.path.join(self.output_dir, "processed_data.csv")
+        processed_data.to_csv(processed_data_file, index=False)
+    
     def process_time_range(self, start_date, end_date=None):
         """
       This method prepares the data by loading and validating based on specified date range and columns.
@@ -39,15 +55,12 @@ class DataProcessor:
         processed_data = data_checker.full_validation(self.core_processing_par)
         
         # save the processed data
-        processed_data_file = os.path.join(self.output_dir, "processed_time_range_data.csv")
-        processed_data.to_csv(processed_data_file, index=False)
+        self._save_processed_data(processed_data)
 
-        # step 3: prepare the components needed for EDA (TODO: implement EDA logic)
+        # step 3: prepare the components needed for further analysis
         time = processed_data[self.time_column]
-        organized_sensors = {}
-        for division, division_sensors in self.sensors_dict.items():
-            organized_sensors[division] = [processed_data[col] for col in division_sensors if col in processed_data.columns]
-        
+        organized_sensors = self._organize_sensors(processed_data)
+
         return time, organized_sensors, processed_data
 
     def process_full_data(self):
@@ -64,13 +77,10 @@ class DataProcessor:
         processed_data = data_checker.full_validation(self.core_processing_par)
         
         # save the processed data
-        processed_data_file = os.path.join(self.output_dir, "processed_full_data.csv")
-        processed_data.to_csv(processed_data_file, index=False)
+        self._save_processed_data(processed_data)
 
         # step 3: prepare the components needed for further analysis
         time = processed_data[self.time_column]
-        organized_sensors = {}
-        for division, division_sensors in self.sensors_dict.items():
-            organized_sensors[division] = [processed_data[col] for col in division_sensors if col in processed_data.columns]
+        organized_sensors = self._organize_sensors(processed_data)
         
         return time, organized_sensors, processed_data

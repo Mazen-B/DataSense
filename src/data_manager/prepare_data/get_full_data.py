@@ -22,10 +22,11 @@ class FullDataLoader:
         columns = [self.time_column] + self.sensors
         data = load_data(self.file_path).read_file(columns)
 
-        # step 2: filter the time column
+        # step 2: process the time column and update data
         self.time_data_checker = TimePreprocessor(data[[self.time_column]], self.time_column, self.time_format)
-        self.filtered_time = self.time_data_checker.process_time_column(self.check_duplicates_keep).index.to_series()
-
+        processed_df = self.time_data_checker.process_time_column(self.check_duplicates_keep)
+        data[self.time_column] = processed_df.index.to_series()
+        
         # step 3: apply the mask for the date range
         start_date = pd.to_datetime(data[self.time_column].min() )
         end_date = pd.to_datetime(data[self.time_column].max() )
