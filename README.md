@@ -182,6 +182,24 @@ To run the tool, navigate to the src directory and execute the following command
 cd src
 python main.py
 ```
+### ⚠️ Note on `mlxtend` Compatibility
+
+There is a potential bug in `mlxtend` versions **0.23.2 and 0.23.3**, where the `association_rules()` function unexpectedly requires a `num_itemsets` argument. This issue does not exist in version **0.23.1** and earlier.
+
+#### Recommended Solution:
+I **Install `mlxtend` 0.23.1** or a version higher than 0.23.3 (if available).
+
+#### ❌ If you encounter this error:
+TypeError: association_rules() missing 1 required positional argument: 'num_itemsets'
+#### ✅ Fix Options:
+1. **Downgrade `mlxtend` to 0.23.1** (Recommended):
+    ```bash
+    pip install mlxtend==0.23.1
+    ```
+2. Manually specify num_itemsets in the function call:
+    ```python
+    rules = association_rules(frequent_itemsets, num_itemsets=len(discretized_data), metric="confidence", min_threshold=min_confidence)
+    ```
 
 ## License
 This project is licensed under the MIT License, allowing free use and modification.
