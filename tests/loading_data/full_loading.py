@@ -50,7 +50,8 @@ class TestFullDataLoader(unittest.TestCase):
 
         loader = FullDataLoader(self.csv_file_path, self.sensors, self.time_column, self.time_format, self.check_duplicates_keep)
         filtered_data = loader.get_filtered_data()
-
+        filtered_data["time"] = pd.to_datetime(filtered_data["time"])  
+        
         # check if the loaded data matches the mock data
         pd.testing.assert_frame_equal(filtered_data, mock_data)
 

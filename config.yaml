@@ -2,12 +2,28 @@ input_file: "../input_files/dummy_data.csv"
 output_dir: "../output/"
 time_column: "time"
 time_format: "%Y-%m-%d %H:%M:%S"
+
+# ==================================
+# Date-Based Data Loading (optional)
+# ==================================
+### 1) Single-Day Analysis (loads data for a specific date):
+# date: "2024-06-01"  
+### 2) Time-Range Analysis (loads a subset of data within the given range, exclusive of end_date):
+# for loading and analyzing a specific portion of the data
+# start_date: "2024-06-01" 
+# end_date: "2024-06-10"
+### 3) Full Dataset Processing (loads all available data if no date fields are provided).
+
 sensors:
   temperature:
     - "sensor1"
     - "sensor2"
   pressure:
     - "sensor3"
+  el_power:
+    - "sensor4"
+  ordinal:
+    - "sensor5"
 pre_processing:
   time_col:
     check_duplicates_keep: "first"
