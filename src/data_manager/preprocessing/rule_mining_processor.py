@@ -89,8 +89,9 @@ class RuleMiningProcessor:
         
         # convert columns to boolean type
         self.df[categorical_columns] = self.df[categorical_columns].astype(bool)
-        
-        logging.info(f"Converted categorical columns to boolean: {categorical_columns}")
+
+        if isinstance(categorical_columns, list) and categorical_columns:
+            logging.info(f"Converted categorical columns to boolean: {categorical_columns}")
 
     def last_emptness_check(self):
         """

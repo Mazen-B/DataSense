@@ -25,12 +25,11 @@ class FullDataLoader:
         # step 2: process the time column and update data
         self.time_data_checker = TimePreprocessor(data[[self.time_column]], self.time_column, self.time_format)
         processed_df = self.time_data_checker.process_time_column(self.check_duplicates_keep)
-        data[self.time_column] = processed_df.index.to_series()
+        data[self.time_column] = processed_df[self.time_column]
         
         # step 3: apply the mask for the date range
-        start_date = pd.to_datetime(data[self.time_column].min() )
-        end_date = pd.to_datetime(data[self.time_column].max() )
-        data[self.time_column] = pd.to_datetime(data[self.time_column], errors="coerce")
+        start_date = pd.to_datetime(data[self.time_column].min())
+        end_date = pd.to_datetime(data[self.time_column].max())
 
         # create the mask and filter the data
         date_mask = (data[self.time_column] >= start_date) & (data[self.time_column] <= end_date)
